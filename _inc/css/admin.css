@@ -1,0 +1,18 @@
+#xspf_plgen.postbox input[type=text]{
+    width:100%;
+}
+#xspf_plgen.postbox label{
+    font-weight: bold;
+    display:block;
+}
+#xspf_plgen.postbox span{
+    color:#999;
+    display:block;
+}
+
+#xspf_plgen.postbox #xspf-plgen-track {
+    margin-left:10px;
+    padding-left:10px;
+    border-left:5px solid #DDD;
+}
+
