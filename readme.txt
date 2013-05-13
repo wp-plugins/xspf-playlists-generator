@@ -41,7 +41,7 @@ See function xspf_plgen_get_xspf_permalink() in xspf-plgen-templates.php.
 See function xspf_plgen_get_tomahk_playlist() in xspf-plgen-templates.php.
 You could also be interested by the functions xspf_plgen_get_tomahk_playlist_link() and xspf_plgen_get_tomahk_playlist_id() of the same file.
 
-This last function is also responsible for the submission of the XSPF file to toma.hk : it sends the file to Toma.hk, gets back the Toma.hk playlist ID, and stores it as a post meta.
+This last function is also responsible for the submission of the XSPF file to Toma.hk : it sends the XSPF file to Toma.hk, returns the Toma.hk playlist ID, and stores it as a post meta.
 So the XSPF is only sent the first time; next time the value from the post meta is retrieved.
 
 == Screenshots ==
