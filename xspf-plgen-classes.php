@@ -5,7 +5,6 @@ class xspf_plgen_playlist {
     var $playlist_title;
     var $playlist_author;
     var $tracklist_url;
-    var $tracklist_dynamic_url; //transformed url
     var $tracks_selector;
     var $track_artist_selector;
     var $track_artist_regex;
@@ -34,8 +33,7 @@ class xspf_plgen_playlist {
         
         $default = self::get_default_args();
         $args = wp_parse_args($args,$default);
-        $this->tracklist_dynamic_url = self::get_dynamic_url($args['tracklist_url']);
-        
+
         $args = apply_filters('xspf_plgen_parser_args',$args);
 
         foreach ($args as $slug=>$arg){
@@ -92,10 +90,10 @@ class xspf_plgen_playlist {
      * @return null|boolean 
      */
 
-    function get_dynamic_url($input_url){
+    function get_doc_content($url,$base_url=false){
         
-        $url = $input_url;
-        
+        $url = trailingslashit( $url );
+
         if(!filter_var($url, FILTER_VALIDATE_URL)){
             return null;
         }
@@ -105,20 +103,21 @@ class xspf_plgen_playlist {
         curl_setopt($curl, CURLOPT_COOKIESESSION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-        $return = curl_exec($curl);
+        $content = curl_exec($curl);
         $info = curl_getinfo($curl); //Some information on the fetch
         curl_close($curl);
         
-        
         $valid_http_codes = array(200,302);
-        
+
         if(!in_array($info['http_code'],$valid_http_codes)) return false;
         
-        if($info['http_code']==302){ //we have been redirected
-            $url = $info['redirect_url'];
+        if($info['http_code']==200){ // we have some content
+            //$content = $content;
+        }elseif($info['http_code']==302){ //we have been redirected
+            $content = self::get_doc_content($info['redirect_url'],$url);
         }
 
-        return apply_filters('xspf_playgen_get_dynamic_url',$url,$input_url);
+        return apply_filters('xspf_playgen_get_doc_content',$content,$url,$base_url);
 
     }
     
@@ -130,21 +129,24 @@ class xspf_plgen_playlist {
     function get_tracks_doc(){
         //URL 
         
-        if (!$this->tracklist_dynamic_url){
+        if (!$this->tracklist_url){
             $this->errors->add( 'tracklist_url_empty', __('The tracklist URL is empty','xspf-plgen') );
             return false;
         }
         
         //check is correct url
-        if (!filter_var($this->tracklist_dynamic_url, FILTER_VALIDATE_URL)){
+        if (!filter_var($this->tracklist_url, FILTER_VALIDATE_URL)){
             $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid','xspf-plgen') );
             $this->tracklist_dynamic_url = null;
             return false;
         }
         
+        
+        
         //check page is found
+        $markup = self::get_doc_content($this->tracklist_url);
 
-        $input_doc = phpQuery::newDocumentFile($this->tracklist_dynamic_url);
+        $input_doc = phpQuery::newDocumentHTML($markup);
         if(!$input_doc){
             $this->errors->add( 'tracklist_page', __('The tracklist page was not found','xspf-plgen') );
             return false;
@@ -171,13 +173,13 @@ class xspf_plgen_playlist {
         phpQuery::selectDocument($input_doc);
 
         $tracklist_el = pq($this->tracks_selector);
-        
+
         //check tracklist is found
         if (!$tracklist_el->htmlOuter()){
             $this->errors->add( 'tracks_selector', __('The tracks selector is invalid','xspf-plgen') );
             return false;
         }
-        
+
         return $tracklist_el;
         
     }
@@ -454,7 +456,7 @@ class xspf_plgen_playlist {
 
         $pl_annot_el = $dom->createElement("annotation");
         $playlist_el->appendChild($pl_annot_el);
-        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspf_plgen()->name,xspf_plgen()->author,date(get_option('date_format')),date(get_option('time_format')),$this->tracklist_dynamic_url));
+        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspf_plgen()->name,xspf_plgen()->author,date(get_option('date_format')),date(get_option('time_format')),$this->tracklist_url));
         $pl_annot_el->appendChild($pl_annot_txt_el);
 
         // tracklist
