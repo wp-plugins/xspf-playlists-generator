@@ -1,5 +1,6 @@
 === XSPF Playlists Generator ===
-Contributors:http://bit.ly/gbreant
+Contributors:grosbouff
+Donate link:http://bit.ly/gbreant
 Tags: Tomahawk, toma.hk, xspf, playlists, parser, music, Spotify, Grooveshark, Soundcloud, Ex.fm
 Requires at least: 3.5
 Tested up to: 3.2
@@ -20,8 +21,7 @@ In the Wordpress backend, you can create/manage playlists in the "Playlist Parse
 It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Playlist Options) under the editor :
 Fill the informations required (tracklist URL, tracks selector, ...) then save your post.
 
-You can check 'XSPF link' to add the playlist link before the post content (or use template function 'xspf_plgen_get_xspf_permalink()'),
-and you can directly embed the playlist (from toma.hk) by checking 'Embed playlist'.
+You can check 'XSPF link' to add the playlist link before the post content, and you can directly embed the playlist (from toma.hk) by checking 'Embed playlist'.
 
 You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower), or embed a toma.hk playlist directly in your post.
  
@@ -32,6 +32,17 @@ Upload the plugin to your blog and Activate it.
 
 == Frequently Asked Questions ==
 
+= How can I display the XSPF link in my templates ? =
+
+See function xspf_plgen_get_xspf_permalink() in xspf-plgen-templates.php.
+
+= How can I display a Toma.hk playlist in my templates ? =
+
+See function xspf_plgen_get_tomahk_playlist() in xspf-plgen-templates.php.
+You could also be interested by the functions xspf_plgen_get_tomahk_playlist_link() and xspf_plgen_get_tomahk_playlist_id() of the same file.
+
+This last function is also responsible for the submission of the XSPF file to Toma.hk : it sends the XSPF file to Toma.hk, returns the Toma.hk playlist ID, and stores it as a post meta.
+So the XSPF is only sent the first time; next time the value from the post meta is retrieved.
 
 == Screenshots ==
 1. Metabox shown under the editor, used to parse a web playlist
