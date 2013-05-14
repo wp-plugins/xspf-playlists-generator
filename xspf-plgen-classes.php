@@ -2,11 +2,10 @@
 
 class xspf_plgen_playlist {
     var $post_id;
-    var $timezone;
     var $playlist_title;
     var $playlist_author;
     var $tracklist_url;
-    var $tracklist_live_url; //transformed url
+    var $tracklist_dynamic_url; //transformed url
     var $tracks_selector;
     var $track_artist_selector;
     var $track_artist_regex;
@@ -19,8 +18,6 @@ class xspf_plgen_playlist {
     var $tracks_limit;
     var $musicbrainz;
 
-    var $input_doc;
-    
     var $tracks = array(); //tracks found
     
     var $errors;
@@ -37,7 +34,7 @@ class xspf_plgen_playlist {
         
         $default = self::get_default_args();
         $args = wp_parse_args($args,$default);
-        $this->tracklist_live_url = self::format_tracklist_url($args['tracklist_url']);
+        $this->tracklist_dynamic_url = self::get_dynamic_url($args['tracklist_url']);
         
         $args = apply_filters('xspf_plgen_parser_args',$args);
 
@@ -50,7 +47,6 @@ class xspf_plgen_playlist {
     
     function get_default_args(){
         $default = array(
-            'timezone'                  => false, //use default timezone
             'tracklist_url'             => null, //url to parse
             'tracks_selector'           => null,
             'track_artist_selector'     => null,
@@ -89,49 +85,106 @@ class xspf_plgen_playlist {
         
         return $post_args;
     }
+    
+    /**
+     * Check if the input URL returns something or is a redirection.
+     * @param type $input_url
+     * @return null|boolean 
+     */
 
-    function format_tracklist_url($url){
+    function get_dynamic_url($input_url){
+        
+        $url = $input_url;
         
         if(!filter_var($url, FILTER_VALIDATE_URL)){
             return null;
         }
-                
-        $timestamp = time();
         
-        if($this->timezone){//change timezone
-            date_default_timezone_set($this->timezone);
-        }
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_COOKIESESSION, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        $return = curl_exec($curl);
+        $info = curl_getinfo($curl); //Some information on the fetch
+        curl_close($curl);
         
-        //$url = preg_replace_callback('#\[(.*?)\]#', array(&$this,'format_tracklist_url_arg'),$url);
-        $url = preg_replace_callback("#\[(.*?)\]#", function($parameter) {
-            //TO FIX SHOULD BE value = date($parameter[1],$timestamp); BUT IT DO NOT WORK; WHY ?
-            $value = date($parameter[1]);
-            return apply_filters('xspf_plgen_format_tracklist_url_parameter',$value,$parameter,$timestamp);
-        }, $url);
         
-        if($this->timezone){//get back to WP timezone
-            date_default_timezone_set(get_option('timezone_string'));
+        $valid_http_codes = array(200,302);
+        
+        if(!in_array($info['http_code'],$valid_http_codes)) return false;
+        
+        if($info['http_code']==302){ //we have been redirected
+            $url = $info['redirect_url'];
         }
 
-        return $url;
+        return apply_filters('xspf_playgen_get_dynamic_url',$url,$input_url);
+
     }
-
     
-    function get_tracks(){
-        
+    /**
+     * Select the requested documents
+     * @return boolean 
+     */
+    
+    function get_tracks_doc(){
         //URL 
         
-        if (!$this->tracklist_live_url){
+        if (!$this->tracklist_dynamic_url){
             $this->errors->add( 'tracklist_url_empty', __('The tracklist URL is empty','xspf-plgen') );
             return false;
         }
         
+        //check is correct url
+        if (!filter_var($this->tracklist_dynamic_url, FILTER_VALIDATE_URL)){
+            $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid','xspf-plgen') );
+            $this->tracklist_dynamic_url = null;
+            return false;
+        }
         
+        //check page is found
+
+        $input_doc = phpQuery::newDocumentFile($this->tracklist_dynamic_url);
+        if(!$input_doc){
+            $this->errors->add( 'tracklist_page', __('The tracklist page was not found','xspf-plgen') );
+            return false;
+        }
+        
+        return $input_doc;
+    }
+    
+    /**
+     * Select all the tracks items
+     * @return boolean 
+     */
+    
+    function get_tracks_items(){
+
         if (!$this->tracks_selector){
             $this->errors->add( 'tracks_selector_empty', __('The tracks selector is empty','xspf-plgen') );
             return false;
         }
         
+        $input_doc = self::get_tracks_doc();
+        if(!$input_doc) return false;
+        
+        phpQuery::selectDocument($input_doc);
+
+        $tracklist_el = pq($this->tracks_selector);
+        
+        //check tracklist is found
+        if (!$tracklist_el->htmlOuter()){
+            $this->errors->add( 'tracks_selector', __('The tracks selector is invalid','xspf-plgen') );
+            return false;
+        }
+        
+        return $tracklist_el;
+        
+    }
+
+    
+    function get_tracks(){
+
         if (!$this->track_artist_selector){
             $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
             return false;
@@ -142,40 +195,12 @@ class xspf_plgen_playlist {
             return false;
         }
         
-        //check is correct url
-        if (!filter_var($this->tracklist_live_url, FILTER_VALIDATE_URL)){
-            $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid','xspf-plgen') );
-            $this->tracklist_live_url = null;
-            return false;
-        }
-        
-        
+        $tracklist_items = self::get_tracks_items();
 
-        //check page is found
-
-        $this->input_doc = phpQuery::newDocumentFile($this->tracklist_live_url);
-        if(!$this->input_doc){
-            $this->errors->add( 'tracklist_page', __('The tracklist page was not found','xspf-plgen') );
-            return false;
-        }
-
-        phpQuery::selectDocument($this->input_doc);
-        
-        
-
-        
-        $tracklist_el = pq($this->tracks_selector);
-        
-        //check tracklist is found
-        if (!$tracklist_el->htmlOuter()){
-            $this->errors->add( 'tracks_selector', __('The tracks selector is invalid','xspf-plgen') );
-            return false;
-        }
-        
-
+        if (!$tracklist_items) return false;
 
         // Get all tracks
-        foreach($tracklist_el as $key=>$track) {
+        foreach($tracklist_items as $key=>$track) {
 
             $newtrack = $this->new_track();
             
@@ -224,6 +249,13 @@ class xspf_plgen_playlist {
         if(!$pattern) {
             $result = $string;
         }else{
+            //add trailing slash
+            $pattern = trailingslashit($pattern);
+            //add beginning slash
+            $pattern = strrev($pattern); //reverse string
+            $pattern = trailingslashit($pattern);
+            $pattern = strrev($pattern);
+            
             preg_match($pattern, $string, $matches);
 
             if ($matches[1])
@@ -422,7 +454,7 @@ class xspf_plgen_playlist {
 
         $pl_annot_el = $dom->createElement("annotation");
         $playlist_el->appendChild($pl_annot_el);
-        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspf_plgen()->name,xspf_plgen()->author,date(get_option('date_format')),date(get_option('time_format')),$this->tracklist_live_url));
+        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspf_plgen()->name,xspf_plgen()->author,date(get_option('date_format')),date(get_option('time_format')),$this->tracklist_dynamic_url));
         $pl_annot_el->appendChild($pl_annot_txt_el);
 
         // tracklist

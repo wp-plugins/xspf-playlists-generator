@@ -74,41 +74,10 @@ class xspf_plgen_admin {
             <label for="<?php $this->field_name('tracklist_url');?>"><?php _e('Tracklist URL','xspf-plgen');?> *</label>
             <span class="xspf-plgen-info">
                 <?php _e('Enter the URL of the page where the tracklist is displayed.','xspf-plgen');?><br/>
-                <?php _e('Some tracklists URL have time arguments; you can enter them using a php <a href="http://www.php.net/manual/en/function.date.php" target="_blank">date/time parameter</a> between square brackets.','xspf-plgen');?><br/>
-                <?php _e('Examples:','xspf-plgen');?><br/>
-                
-                <?php printf(__('%1s will be interpreted as %2s','xspf-plgen'),'<code>http://www.radio.com/tracklist/[U]</code>','<code>'.xspf_plgen_playlist::format_tracklist_url('http://www.radio.com/tracklist/[U]').'</code>');?><br/>
-                <?php printf(__('%1s will be interpreted as %2s','xspf-plgen'),'<code>http://www.anotherone.fm/last_tracks.php?start_date=[Y-m-d]&start_hour=[G]&start_minute=[i]</code>','<code>'.xspf_plgen_playlist::format_tracklist_url('http://www.anotherone.fm/last_tracks.php?start_date=[Y-m-d]&start_hour=[G]&start_minute=[i]').'</code>');?>
-                
             </span>
             <input name="<?php $this->field_name('tracklist_url');?>" type="text" value="<?php echo $this->post_playlist->tracklist_url;?>"/>
         </p>
-        
-        <!-- TimeZone -->        
-        <p>
-            
-            <label style="display:inline" for="<?php $this->field_name('musicbrainz');?>"><?php _e("Tracklist TimeZone",'xspf-plgen');?></label>
-            <span class="xspf-plgen-info"><?php _e('If you use time arguments in your Tracklist URL, you should set a TimeZone.','xspf-plgen');?></span>
-            
-            <?php
-
-            $selected_timezone = $this->post_playlist->timezone;
-
-
-            ?>
-            <select name="<?php $this->field_name('timezone');?>">
-                <option value="">-----</option>
-                <?php
-                foreach(DateTimeZone::listIdentifiers() as $tz) {
-                    ?>
-                    <option value="<?php echo $tz;?>"<?php selected($tz,$selected_timezone);?>><?php echo $tz;?></option>
-                    <?php
-                }
-                ?>
-            </select>
-
-        </p>
-        
+ 
         <!-- tracks selector-->
         <p>
             
@@ -209,7 +178,6 @@ class xspf_plgen_admin {
 
             $args = array(
                 'tracklist_url'   => self::get_field_value('tracklist_url'),
-                'timezone' => self::get_field_value('timezone'),
                 'tracks_selector' => self::get_field_value('tracks_selector'),
                 'track_artist_selector' => self::get_field_value('track_artist_selector'),
                 'track_artist_regex' => self::get_field_value('track_artist_regex'),
