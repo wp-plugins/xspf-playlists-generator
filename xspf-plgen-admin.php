@@ -172,9 +172,7 @@ class xspf_plgen_admin {
             $is_valid_nonce = false;
             if ( isset( $_POST[ 'xspf_plgen_form' ]) && wp_verify_nonce( $_POST['xspf_plgen_form'], xspf_plgen()->basename)) $is_valid_nonce=true;
             
-            if ($is_autosave || $is_revision || $is_valid_nonce){
-                    //return;
-            }
+            if ($is_autosave || $is_revision || !$is_valid_nonce) return;
 
             $args = array(
                 'tracklist_url'   => self::get_field_value('tracklist_url'),

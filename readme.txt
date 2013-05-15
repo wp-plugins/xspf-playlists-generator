@@ -48,6 +48,8 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.2 =
+* Fixed bug when updating a post with the Quick Edit
 = 0.1.1 =
 * Checks for beginning/trailing slash for the patterns, before executing the regexes for title/artist/album
 * Improved the way we catch tracklists (with curl); so no more need to set time arguments in the url / set timezone / make regexes
