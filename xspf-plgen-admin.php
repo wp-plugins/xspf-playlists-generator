@@ -69,17 +69,17 @@ class xspf_plgen_admin {
         $tracks_selector = $this->post_playlist->tracks_selector;
         ?>
         <!-- tracklist URL-->
-        <p>
+        <div>
             
             <label for="<?php $this->field_name('tracklist_url');?>"><?php _e('Tracklist URL','xspf-plgen');?> *</label>
             <span class="xspf-plgen-info">
                 <?php _e('Enter the URL of the page where the tracklist is displayed.','xspf-plgen');?><br/>
             </span>
             <input name="<?php $this->field_name('tracklist_url');?>" type="text" value="<?php echo $this->post_playlist->tracklist_url;?>"/>
-        </p>
+        </div>
  
         <!-- tracks selector-->
-        <p>
+        <div>
             
             <label for="<?php $this->field_name('tracks_selector');?>"><?php _e('Tracks Selector','xspf-plgen');?> *</label>
             <span class="xspf-plgen-info"><?php _e('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector</a> to get each track from the tracklist page, for example: <code>#content #tracklist .track</code>','xspf-plgen');?></span>
@@ -89,75 +89,82 @@ class xspf_plgen_admin {
             
             <div id="xspf-plgen-track">
                 <!-- track artist-->
-                <p>
+                <div>
                     
                     <label for="<?php $this->field_name('track_artist_selector');?>"><?php _e('Track Artist Selector','xspf-plgen');?> *</label>
                     <span class="xspf-plgen-info"><?php _e('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector</a> (relative to the Tracks Selector) to get the artist name for the track, for example: <code>h4 .artist strong</code>','xspf-plgen');?></span>
                     <input name="<?php $this->field_name('track_artist_selector');?>" type="text" value="<?php echo $this->post_playlist->track_artist_selector;?>"/>
-                    <input name="<?php $this->field_name('track_artist_regex');?>" placeholder="<?php _e('Optional regex','xspf-plgen');?>" type="text" value="<?php echo $this->post_playlist->track_artist_regex;?>"/>
+					<div class="regex">
+						<?php _e('Optional regex expression to filter this','xspf-plgen');?> :<br/>
+						/<input class="regex" name="<?php $this->field_name('track_artist_regex');?>" type="text" value="<?php echo esc_html($this->post_playlist->track_artist_regex);?>"/>/m
+                    </div>
                     
-                    
-                </p>
+                </div>
                 <!-- track title-->
-                <p>
+                <div>
                     
                     <label for="<?php $this->field_name('track_title_selector');?>"><?php _e('Track Title Selector','xspf-plgen');?> *</label>
                     <span class="xspf-plgen-info"><?php _e('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector</a> (relative to the Tracks Selector) to get the title for the track, for example: <code>span</code>','xspf-plgen');?></span>
                     <input name="<?php $this->field_name('track_title_selector');?>" type="text" value="<?php echo $this->post_playlist->track_title_selector;?>"/>
-                    <input name="<?php $this->field_name('track_title_regex');?>" placeholder="<?php _e('Optional regex','xspf-plgen');?>" type="text" value="<?php echo $this->post_playlist->track_title_regex;?>"/>
+					<div class="regex">
+						<?php _e('Optional regex expression to filter this','xspf-plgen');?> :<br/>
+						/<input class="regex" name="<?php $this->field_name('track_title_regex');?>" type="text" value="<?php echo esc_html($this->post_playlist->track_title_regex);?>"/>/m
+					</div>
                     
-                </p>
+                </div>
                 
                 <!-- track album-->
-                <p>
+                <div>
                     
                     <label for="<?php $this->field_name('track_album_selector');?>"><?php _e('Track Album Selector','xspf-plgen');?></label>
                     <span class="xspf-plgen-info"><?php _e('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector</a> (relative to the Tracks Selector) to get the album for the track, for example: <code>span.album</code>','xspf-plgen');?></span>
                     <input name="<?php $this->field_name('track_album_selector');?>" type="text" value="<?php echo $this->post_playlist->track_album_selector;?>"/>
-                    <input name="<?php $this->field_name('track_album_regex');?>" placeholder="<?php _e('Optional regex','xspf-plgen');?>" type="text" value="<?php echo $this->post_playlist->track_album_regex;?>"/>
-                    
-                </p>
+					<div class="regex">
+						<?php _e('Optional regex expression to filter this','xspf-plgen');?> :<br/>
+						/<input name="<?php $this->field_name('track_album_regex');?>" type="text" value="<?php echo esc_html($this->post_playlist->track_album_regex);?>"/>/m
+                    </div>
+                </div>
                 
                 <!-- track image-->
-                <p>
+                <div>
                     
                     <label for="<?php $this->field_name('track_album_art_selector');?>"><?php _e('Track Image Selector','xspf-plgen');?></label>
                     <span class="xspf-plgen-info"><?php _e('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector</a> (relative to the Tracks Selector) to get the image for the track, for example: <code>.cover img</code>','xspf-plgen');?></span>
                     <input name="<?php $this->field_name('track_album_art_selector');?>" type="text" value="<?php echo $this->post_playlist->track_album_art_selector;?>"/>
                     
                     
-                </p>
+                </div>
             </div>
-        </p>
+        </div>
         <!-- MusicBrainz -->
-        <p>
+        <div>
             <input name="<?php $this->field_name('musicbrainz');?>" type="checkbox"<?php checked($this->post_playlist->musicbrainz);?> value="1"/>
             <label style="display:inline" for="<?php $this->field_name('musicbrainz');?>"><?php _e('Compare tracks informations with <a href="http://musicbrainz.org/" target="_blank">MusicBrainz</a>','xspf-plgen');?></label>
             <span class="xspf-plgen-info">
                 <?php _e('Sometimes, the metadatas (title,artist,...) of the tracks are not corrects.  Enabling this will make MusicBrainz try to correct wrong values.','xspf-plgen');?><br/>
                 <?php _e('This makes the playlist render slower : each track takes about ~1 second to be checked with MusicBrainz.','xspf-plgen');?>
             </span>
-        </p>
+        </div>
         
         <!-- XSPF link embed -->
-        <p>
+        <div>
             <input name="<?php $this->field_name('xspf_link');?>" type="checkbox"<?php checked($this->post_playlist->xspf_link);?> value="1"/>
             <label style="display:inline" for="<?php $this->field_name('xspf_link');?>"><?php _e('XSPF link','xspf-plgen');?></label>
             <span class="xspf-plgen-info">
                 <?php _e('Adds automatically an XPSF link to your post content.','xspf-plgen');?><br/>
                 <?php printf(__('You might want to disable this and use function %s instead, in your templates.','xspf-plgen'),'<code>xspf_plgen_get_xspf_permalink()</code>');?><br/>
             </span>
-        </p>
+        </div>
 
         <!-- Toma.hk embed -->
-        <p>
+        <div>
             <input name="<?php $this->field_name('tomahk_embed');?>" type="checkbox"<?php checked($this->post_playlist->tomahk_embed);?> value="1"/>
             <label style="display:inline" for="<?php $this->field_name('tomahk_embed');?>"><?php _e('Embed playlist from <a href="http://toma.hk/tools/embeds.php" target="_blank">Toma.hk</a>','xspf-plgen');?></label>
             <span class="xspf-plgen-info">
                 <?php _e('Displays the playlist generated from the toma.hk website, under your post.','xspf-plgen');?><br/>
                 <?php _e('ATTENTION : Toma.hk playlists do not update automatically yet, but this will be improved.','xspf-plgen');?><br/>
             </span>
-        </p>
+        </div>
         <?php
         
         

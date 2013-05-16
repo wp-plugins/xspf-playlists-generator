@@ -48,6 +48,9 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.3 =
+* Added /m option for regexes
+* Escaping regex expression to display it in the input
 = 0.1.2 =
 * Fixed bug when updating a post with the Quick Edit
 = 0.1.1 =

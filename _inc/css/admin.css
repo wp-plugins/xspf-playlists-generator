@@ -1,6 +1,17 @@
 #xspf_plgen.postbox input[type=text]{
     width:100%;
 }
+#xspf_plgen.postbox div{
+	margin-top:10px;
+}
+#xspf_plgen.postbox .regex{
+    color:#999;
+}
+#xspf_plgen.postbox .regex input{
+    width:50%;
+	color:#000;
+}
+
 #xspf_plgen.postbox label{
     font-weight: bold;
     display:block;

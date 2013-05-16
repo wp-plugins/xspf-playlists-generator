@@ -137,7 +137,6 @@ class xspf_plgen_playlist {
         //check is correct url
         if (!filter_var($this->tracklist_url, FILTER_VALIDATE_URL)){
             $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid','xspf-plgen') );
-            $this->tracklist_dynamic_url = null;
             return false;
         }
         
@@ -257,6 +256,8 @@ class xspf_plgen_playlist {
             $pattern = strrev($pattern); //reverse string
             $pattern = trailingslashit($pattern);
             $pattern = strrev($pattern);
+			//add regex option
+			$pattern.='m'; //multiline
             
             preg_match($pattern, $string, $matches);
 
