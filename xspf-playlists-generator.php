@@ -2,9 +2,9 @@
 /*
 Plugin Name: XSPF Playlists Generator
 Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.
-Version: 0.1.3
+Version: 0.1.4
 Author: G.Breant
-Author URI: http://pencil2d.org
+Author URI: http://bit.ly/cc-sndbox
 Plugin URI: http://wordpress.org/extend/plugins/pencil-wiki
 License: GPL2
 */
@@ -19,7 +19,7 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.3';
+    public $version = '0.1.4';
 
     /**
     * @public string plugin DB version
