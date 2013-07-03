@@ -25,7 +25,20 @@ You can check 'XSPF link' to add the playlist link before the post content, and 
 
 You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower), or embed a toma.hk playlist directly in your post.
  
-Demo [here](http://bit.ly/cc-sndbox-xspf)
+= Demo =
+See it in action [here](http://sandbox.pencil2d.org/xspf_plgen).
+
+= Contributors =
+[Contributors are listed
+here](https://github.com/gordielachance/xspf-playlists-generator/contributors)
+= Notes =
+
+For feature request and bug reports, [please use the
+forums](http://wordpress.org/support/plugin/xspf-playlists-generator#postform).
+
+If you are a plugin developer, [we would like to hear from
+you](https://github.com/gordielachance/xspf-playlists-generator). Any contribution would be
+very welcome.
 
 == Installation ==
 
