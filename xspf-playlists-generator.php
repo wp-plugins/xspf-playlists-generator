@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: XSPF Playlists Generator
-Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.
-Version: 0.1.4
+Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
+Version: 0.1.5
 Author: G.Breant
 Author URI: http://bit.ly/cc-sndbox
 Plugin URI: http://wordpress.org/extend/plugins/pencil-wiki
@@ -19,7 +19,7 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.4';
+    public $version = '0.1.5';
 
     /**
     * @public string plugin DB version
@@ -84,7 +84,10 @@ class xspf_playlists_generator {
     }
 
     function includes(){
-        require($this->plugin_dir . '_inc/lib/phpQuery/phpQuery.php');
+        if (!class_exists("phpQuery")){
+            require($this->plugin_dir . '_inc/lib/phpQuery/phpQuery.php');
+        }
+        
 
         require($this->plugin_dir . 'xspf-plgen-classes.php');
         require($this->plugin_dir . 'xspf-plgen-templates.php');
@@ -116,6 +119,7 @@ class xspf_playlists_generator {
 
     }
 
+
     function scripts_styles(){
         wp_register_style( 'xspf-plgen', xspf_plgen()->plugin_url .'_inc/css/style.css',false,$this->version);
         wp_enqueue_style( 'xspf-plgen' );
@@ -146,12 +150,11 @@ class xspf_playlists_generator {
      */
 
     function populate_post_playlist(){
-        global $post;
-
+        
         if (get_post_type()!=$this->post_type) return false;
         if (!is_singular()) return false;
 
-        $this->post_playlist = new xspf_plgen_playlist($post->ID);
+        $this->post_playlist = new xspf_plgen_playlist(get_the_ID());
 
 
     }
@@ -182,6 +185,8 @@ class xspf_playlists_generator {
         global $post;
         
         if ($post->post_type!=$this->post_type) return $content;
+        
+        $new_content='';
 
         $link_xspf = xspf_plgen_get_xspf_permalink();
 

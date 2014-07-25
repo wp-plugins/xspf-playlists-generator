@@ -3,7 +3,7 @@ Contributors:grosbouff
 Donate link:http://bit.ly/gbreant
 Tags: Tomahawk, toma.hk, xspf, playlists, parser, music, Spotify, Grooveshark, Soundcloud, Ex.fm
 Requires at least: 3.5
-Tested up to: 3.2
+Tested up to: 4
 Stable tag: trunk
 License: GPLv2 or later
 
@@ -18,7 +18,7 @@ So you are able to listen to the tracks provided by those stations, without the 
 = Create a new playlist =
 
 In the Wordpress backend, you can create/manage playlists in the "Playlist Parsers" section of the left menu.
-It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Playlist Options) under the editor :
+It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Wizard) under the editor :
 Fill the informations required (tracklist URL, tracks selector, ...) then save your post.
 
 You can check 'XSPF link' to add the playlist link before the post content, and you can directly embed the playlist (from toma.hk) by checking 'Embed playlist'.
@@ -27,6 +27,11 @@ You can also check an option to compare tracks data to [MusicBrainz](http://musi
  
 = Demo =
 See it in action [here](http://sandbox.pencil2d.org/xspf_plgen).
+
+= Import existing stations =
+We made an [XML export](https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml) of our stations. 
+You can import it (Tools > Import > Wordpress) once the plugin has been installed !
+Feel free to send us yours !
 
 = Contributors =
 [Contributors are listed
@@ -62,6 +67,10 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.5 =
+* Improved wizard
+= 0.1.4 =
+* Minor
 = 0.1.3 =
 * Added /m option for regexes
 * Escaping regex expression to display it in the input

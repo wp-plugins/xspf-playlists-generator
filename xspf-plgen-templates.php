@@ -10,11 +10,10 @@
  */
 
 function xspf_plgen_get_xspf_permalink($post_id=false){
-    global $post;
     global $wp_rewrite;
 
     if(!$post_id){
-        $post_id = $post->ID;
+        $post_id = get_the_ID();
     }
 
     $post_permalink = get_permalink($post_id);
@@ -42,10 +41,9 @@ function xspf_plgen_get_xspf_permalink($post_id=false){
  */
 
 function xspf_plgen_get_tomahk_playlist_id($post_id=false,$force=false){
-    global $post;
 
     if(!$post_id){
-        $post_id = $post->ID;
+        $post_id = get_the_ID();
     }
 
     $playlist_id = get_post_meta($post_id,'toma_hk_id', true);
@@ -53,7 +51,7 @@ function xspf_plgen_get_tomahk_playlist_id($post_id=false,$force=false){
     if ((!$playlist_id)||($force)){ //send XSPF to toma.hk and get playlist ID back
         
         //$playlist = new xspf_plgen_playlist($post_id);
-        //$tracks = $playlist->get_tracks();
+        //$tracks = $playlist->populate_tracks();
         //if(!$tracks) return false;
         
 
@@ -105,10 +103,9 @@ function xspf_plgen_get_tomahk_playlist_id($post_id=false,$force=false){
 function xspf_plgen_get_tomahk_playlist_link($post_id=false){
 
     $playlist_id = xspf_plgen_get_tomahk_playlist_id($post_id);
-
-    if ($playlist_id){
-        $playlist_url = 'http://toma.hk/p/'.$playlist_id;
-    }
+    if (!$playlist_id) return false;
+    
+    $playlist_url = 'http://toma.hk/p/'.$playlist_id;
 
     return apply_filters('xspf_plgen_get_tomahk_playlist_link',$playlist_url,$playlist_id,$post_id);
 
@@ -160,6 +157,15 @@ function xspf_plgen_get_tomahk_playlist($post_id=false){
 function xspf_plgen_is_local_wp(){
     if ($_SERVER['REMOTE_ADDR']=='127.0.0.1') return true;
     return false;
+}
+
+function xspf_classes($array){
+    echo xspf_get_classes($array);
+}
+
+function xspf_get_classes($classes){
+    if (empty($classes)) return;
+    return' class="'.implode(' ',$classes).'"';
 }
 
 

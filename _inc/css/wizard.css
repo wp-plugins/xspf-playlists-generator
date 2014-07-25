@@ -1,0 +1,99 @@
+#xspf-plgen-wizard input[type=text]{
+    width:100%;
+}
+
+#xspf-plgen-wizard #xspf-wizard-step-3 label {
+    font-weight: bold;
+    width: 20%;
+    display: inline-block;
+}
+
+#xspf-plgen-wizard #xspf-wizard-step-3 input.selector{
+    width:50%;
+}
+
+
+#xspf-plgen-wizard .regex-wrapper{
+    color:#999;
+    display:none;
+    padding:5px;
+}
+
+#xspf-plgen-wizard .regex-wrapper .code:before{
+    content:'/';
+    width:10px;
+}
+#xspf-plgen-wizard .regex-wrapper .code:after{
+    content:'/m';
+}
+#xspf-plgen-wizard .regex-wrapper input.regex{
+    width:60%;
+    color:#000;
+    color:#999;
+}
+
+#xspf-plgen-wizard label{
+    font-weight: bold;
+}
+#xspf-plgen-wizard span,#xspf-plgen-wizard p{
+    color:#999;
+}
+
+.xspf-wizard-step{
+    padding:10px;
+    padding-bottom:20px;
+}
+.xspf-wizard-step.has-errors{
+    border-left:4px solid #dd3d36;
+}
+
+
+.xspf-wizard-step-header{
+    padding:10px;
+}
+
+#xspf-plgen-wizard #xspf-wizard-step-3 {
+    margin-left:10px;
+    padding-left:10px;
+    border-left:5px solid #DDD;
+}
+
+#xspf-plgen-wizard #xspf-wizard-step-3 .track-info{
+    margin-bottom:10px;
+}
+
+#xspf-plgen-wizard .feedback-link{
+    float:right;
+    display:none;
+}
+#xspf-plgen-wizard .xspf-wizard-step-title{
+    clear:left;
+    display:inline;
+}
+
+#xspf-plgen-wizard .feedback-content{
+    display:none;
+}
+#xspf-plgen-wizard.has-errors .feedback-content{
+    display:inherit;
+}
+
+
+.code{
+    font-family: Consolas,Monaco,monospace;
+    font-size: 13px;
+    background: #f9f9f9;
+    outline: 0;
+    direction: ltr;
+}
+
+#xspf-plgen-wizard .feedback-wrapper .output{
+    width: 100%;
+}
+.step-error{
+    color:#dd3d36;
+    font-weight:bold;
+    padding:5px 10px;
+    padding-left:0;
+}
+

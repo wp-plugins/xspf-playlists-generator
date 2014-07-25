@@ -16,12 +16,17 @@ class xspf_plgen_playlist {
     var $track_comment_selector;
     var $tracks_limit;
     var $musicbrainz;
+    var $tomahk_embed;
+    var $xspf_link;
+    var $playlist_info;
 
     var $tracks = array(); //tracks found
     
     var $errors;
+    
+    var $body_el;
 
-    function __construct($args){ //args or post id
+    function __construct($args = false){ //args or post id
         
         $this->errors = new WP_Error();
 
@@ -43,7 +48,7 @@ class xspf_plgen_playlist {
         
     }
     
-    function get_default_args(){
+    static function get_default_args(){
         $default = array(
             'tracklist_url'             => null, //url to parse
             'tracks_selector'           => null,
@@ -126,32 +131,30 @@ class xspf_plgen_playlist {
      * @return boolean 
      */
     
-    function get_tracks_doc(){
+    function get_body_el(){
         //URL 
         
         if (!$this->tracklist_url){
-            $this->errors->add( 'tracklist_url_empty', __('The tracklist URL is empty','xspf-plgen') );
+            $this->errors->add( 'tracklist_url_empty', __('The tracklist URL is empty.','xspf-plgen') );
             return false;
         }
         
         //check is correct url
         if (!filter_var($this->tracklist_url, FILTER_VALIDATE_URL)){
-            $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid','xspf-plgen') );
+            $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid.','xspf-plgen') );
             return false;
         }
-        
-        
-        
-        //check page is found
-        $markup = self::get_doc_content($this->tracklist_url);
 
-        $input_doc = phpQuery::newDocumentHTML($markup);
-        if(!$input_doc){
-            $this->errors->add( 'tracklist_page', __('The tracklist page was not found','xspf-plgen') );
+        //check page is found
+        $page_markup = self::get_doc_content($this->tracklist_url);
+        $page_doc = phpQuery::newDocumentHTML($page_markup);
+        $body_el = $page_doc->find('body');
+        if(!$body_el){
+            $this->errors->add( 'tracklist_body_html', __('The tracklist page was not found.','xspf-plgen') );
             return false;
         }
         
-        return $input_doc;
+        return $body_el;
     }
     
     /**
@@ -159,33 +162,52 @@ class xspf_plgen_playlist {
      * @return boolean 
      */
     
-    function get_tracks_items(){
+    function get_tracklist(){
 
         if (!$this->tracks_selector){
             $this->errors->add( 'tracks_selector_empty', __('The tracks selector is empty','xspf-plgen') );
             return false;
         }
         
-        $input_doc = self::get_tracks_doc();
-        if(!$input_doc) return false;
+        if (!$this->body_el){ //first time called
+            $this->body_el = self::get_body_el();
+        }
         
-        phpQuery::selectDocument($input_doc);
+        if(!$this->body_el){
+            return false;
+        }
+        
+        phpQuery::selectDocument($this->body_el);
 
         $tracklist_el = pq($this->tracks_selector);
 
         //check tracklist is found
         if (!$tracklist_el->htmlOuter()){
-            $this->errors->add( 'tracks_selector', __('The tracks selector is invalid','xspf-plgen') );
+            $this->errors->add( 'tracks_selector', __('Either the tracks selector is invalid, or there is actually no tracks in the playlist – you may perhaps try again later.','xspf-plgen') );
             return false;
         }
 
         return $tracklist_el;
         
     }
+    
+    function populate_tracks(){
+        $tracks = self::get_tracks();
+        
+        //clean inputs
+        foreach ((array)$tracks as $key=>$track){
+            $tracks[$key] = $this->format_trackinfo($track);
+        }
+        
+        //array unique
+        $this->tracks = array_unique((array)$tracks, SORT_REGULAR);
+        
+        
+    }
 
     
     function get_tracks(){
-
+        
         if (!$this->track_artist_selector){
             $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
             return false;
@@ -196,7 +218,7 @@ class xspf_plgen_playlist {
             return false;
         }
         
-        $tracklist_items = self::get_tracks_items();
+        $tracklist_items = self::get_tracklist();
 
         if (!$tracklist_items) return false;
 
@@ -236,6 +258,8 @@ class xspf_plgen_playlist {
     
     function get_dom_element_content($track,$slug){
         
+        $result = '';
+        
         $selector_var_name='track_'.$slug.'_selector';
         $regex_var_name='track_'.$slug.'_regex';
 
@@ -261,7 +285,7 @@ class xspf_plgen_playlist {
             
             preg_match($pattern, $string, $matches);
 
-            if ($matches[1])
+            if (isset($matches[1]))
                 $result = $matches[1];
         }
         
@@ -360,29 +384,19 @@ class xspf_plgen_playlist {
     
     function get_xpls(){
 
-        $input_tracks = $this->get_tracks();
-
-        //clean inputs
-        foreach ((array)$input_tracks as $key=>$track){
-            $input_tracks[$key] = $this->format_trackinfo($track);
-        }
-        
-        //array unique
-        $input_tracks = array_unique((array)$input_tracks, SORT_REGULAR);
+        $this->populate_tracks();
 
         //remove songs where there is no artist+title
-        foreach ((array)$input_tracks as $key=>$track){
+        foreach ((array)$this->tracks as $key=>$track){
             
             if(!$track['artist'] || !$track['title']){
-                unset($input_tracks[$key]);
+                unset($this->tracks[$key]);
             }
         }
         
         
         //limit to 15 songs so the query is not too long.
-        $input_tracks = array_slice((array)$input_tracks, 0, 15);
-        
-        $this->tracks = $input_tracks;
+        $this->tracks = array_slice((array)$this->tracks, 0, 15);
 
         if(!$this->tracks) { //display error message inside playlist
             
