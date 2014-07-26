@@ -28,10 +28,13 @@ You can also check an option to compare tracks data to [MusicBrainz](http://musi
 = Demo =
 See it in action [here](http://sandbox.pencil2d.org/xspf_plgen).
 
-= Import existing stations =
+= Import playlists from our HQ ! =
 We made an [XML export](https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml) of our stations. 
 You can import it (Tools > Import > Wordpress) once the plugin has been installed !
 Feel free to send us yours !
+
+= Duplicating playlists =
+If you consider to create playlists from several radio stations of a same network, consider installing the [Duplicate Post](https://wordpress.org/plugins/duplicate-post/) plugin, which will allow you to create "templates" that you will be able to clone.
 
 = Contributors =
 [Contributors are listed
@@ -67,6 +70,10 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.6 =
+* replaced get_doc_content() by native wp_remote_get()
+* regex stuff improvement
+* bug fixes
 = 0.1.5 =
 * Improved wizard
 = 0.1.4 =

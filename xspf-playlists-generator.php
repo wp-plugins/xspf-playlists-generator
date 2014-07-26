@@ -2,7 +2,7 @@
 /*
 Plugin Name: XSPF Playlists Generator
 Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
-Version: 0.1.5
+Version: 0.1.6
 Author: G.Breant
 Author URI: http://bit.ly/cc-sndbox
 Plugin URI: http://wordpress.org/extend/plugins/pencil-wiki
@@ -19,7 +19,7 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.5';
+    public $version = '0.1.6';
 
     /**
     * @public string plugin DB version
@@ -116,8 +116,22 @@ class xspf_playlists_generator {
 
         add_filter( 'the_content', array(&$this,'the_content_links' ));
         add_filter( 'the_content', array(&$this,'the_content_tomahk_playlist' )); //singular
+        
+        //allow file upload
+        //add_action('post_edit_form_tag' , array( $this, 'post_edit_form_tag' ) );
 
     }
+    
+        /**
+         * Add attributes to the form so we allow to upload files.
+         * @return type
+         */
+        
+        function post_edit_form_tag(){
+            //$post_type = get_post_type( get_the_ID() );
+            //if( $post_type != $this->post_type ) return;
+            echo ' enctype="multipart/form-data" encoding="multipart/form-data" ';
+        }
 
 
     function scripts_styles(){

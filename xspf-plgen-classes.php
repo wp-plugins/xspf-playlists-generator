@@ -23,8 +23,8 @@ class xspf_plgen_playlist {
     var $tracks = array(); //tracks found
     
     var $errors;
-    
     var $body_el;
+    var $is_wizard = false; //special behaviour when wizard is enabled
 
     function __construct($args = false){ //args or post id
         
@@ -38,14 +38,18 @@ class xspf_plgen_playlist {
         
         $default = self::get_default_args();
         $args = wp_parse_args($args,$default);
+        
+        //regexes
+        $args['track_artist_regex'] = stripslashes($args['track_artist_regex']);
+        $args['track_title_regex'] = stripslashes($args['track_title_regex']);
+        $args['track_album_regex'] = stripslashes($args['track_album_regex']);
 
         $args = apply_filters('xspf_plgen_parser_args',$args);
 
         foreach ($args as $slug=>$arg){
             $this->$slug = trim($arg);
         }
-        
-        
+
     }
     
     static function get_default_args(){
@@ -90,43 +94,6 @@ class xspf_plgen_playlist {
     }
     
     /**
-     * Check if the input URL returns something or is a redirection.
-     * @param type $input_url
-     * @return null|boolean 
-     */
-
-    function get_doc_content($url,$base_url=false){
-        
-        $url = trailingslashit( $url );
-
-        if(!filter_var($url, FILTER_VALIDATE_URL)){
-            return null;
-        }
-        
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_COOKIESESSION, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-        $content = curl_exec($curl);
-        $info = curl_getinfo($curl); //Some information on the fetch
-        curl_close($curl);
-        
-        $valid_http_codes = array(200,302);
-
-        if(!in_array($info['http_code'],$valid_http_codes)) return false;
-        
-        if($info['http_code']==200){ // we have some content
-            //$content = $content;
-        }elseif($info['http_code']==302){ //we have been redirected
-            $content = self::get_doc_content($info['redirect_url'],$url);
-        }
-
-        return apply_filters('xspf_playgen_get_doc_content',$content,$url,$base_url);
-
-    }
-    
-    /**
      * Select the requested documents
      * @return boolean 
      */
@@ -139,21 +106,31 @@ class xspf_plgen_playlist {
             return false;
         }
         
+        
         //check is correct url
         if (!filter_var($this->tracklist_url, FILTER_VALIDATE_URL)){
             $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid.','xspf-plgen') );
             return false;
         }
 
-        //check page is found
-        $page_markup = self::get_doc_content($this->tracklist_url);
-        $page_doc = phpQuery::newDocumentHTML($page_markup);
-        $body_el = $page_doc->find('body');
-        if(!$body_el){
-            $this->errors->add( 'tracklist_body_html', __('The tracklist page was not found.','xspf-plgen') );
+        //get page
+        
+        //allows us to filter the parameters depending on the URL
+        $remote_args = apply_filters('xspf_plgen_get_page_args',array(),$this->tracklist_url);
+        $response = wp_remote_get( $this->tracklist_url, $remote_args );
+        
+        if (is_wp_error($response)){
+            $this->errors->add( 'tracklist_page_empty', __('There was an error fetching the content from this URL.','xspf-plgen') );
             return false;
         }
         
+        $page_doc = phpQuery::newDocumentHTML($response['body']);
+        $body_el = $page_doc->find('body');
+        if (!$body_el){
+            $this->errors->add( 'tracklist_page_empty', __('There was an error fetching the content from this URL.','xspf-plgen') );
+            return false;
+        }
+
         return $body_el;
     }
     
@@ -163,11 +140,6 @@ class xspf_plgen_playlist {
      */
     
     function get_tracklist(){
-
-        if (!$this->tracks_selector){
-            $this->errors->add( 'tracks_selector_empty', __('The tracks selector is empty','xspf-plgen') );
-            return false;
-        }
         
         if (!$this->body_el){ //first time called
             $this->body_el = self::get_body_el();
@@ -176,8 +148,13 @@ class xspf_plgen_playlist {
         if(!$this->body_el){
             return false;
         }
-        
+
         phpQuery::selectDocument($this->body_el);
+        
+        if (!$this->tracks_selector){
+            $this->errors->add( 'tracks_selector_empty', __('The tracks selector is empty','xspf-plgen') );
+            return false;
+        }
 
         $tracklist_el = pq($this->tracks_selector);
 
@@ -207,13 +184,13 @@ class xspf_plgen_playlist {
 
     
     function get_tracks(){
-        
-        if (!$this->track_artist_selector){
+
+        if ( (!$this->is_wizard) && (!$this->track_artist_selector) ){
             $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
             return false;
         }
         
-        if (!$this->track_title_selector){
+        if ( (!$this->is_wizard) && (!$this->track_title_selector) ){
             $this->errors->add( 'tracks_selector_empty', __('The track title selector is empty','xspf-plgen') );
             return false;
         }
@@ -228,18 +205,23 @@ class xspf_plgen_playlist {
             $newtrack = $this->new_track();
             
             //artist
-            $newtrack['artist'] = self::get_dom_element_content($track,'artist');
+            $newtrack['artist'] = strip_tags(self::get_dom_element_content($track,'artist'));
 
             //title
-            $newtrack['title'] = self::get_dom_element_content($track,'title');
+            $newtrack['title'] = strip_tags(self::get_dom_element_content($track,'title'));
 
             //album
             if($this->track_album_selector)
-                $newtrack['album'] = self::get_dom_element_content($track,'album');
+                $newtrack['album'] = strip_tags(self::get_dom_element_content($track,'album'));
             
             //picture
-            if($this->track_album_art_selector)
-                $newtrack['image'] = pq($track)->find($this->track_album_art_selector)->attr('src');
+            if($this->track_album_art_selector){
+                $url = pq($track)->find($this->track_album_art_selector)->attr('src');
+                if(filter_var($url, FILTER_VALIDATE_URL)){
+                    $newtrack['image'] = $url;
+                }
+            }
+                
 
             //comment
             /*
@@ -274,19 +256,19 @@ class xspf_plgen_playlist {
         if(!$pattern) {
             $result = $string;
         }else{
+            //flags
+            $flags = 'm';
             //add trailing slash
-            $pattern = trailingslashit($pattern);
+            $pattern = '~'.$pattern.'~'.$flags;
             //add beginning slash
-            $pattern = strrev($pattern); //reverse string
-            $pattern = trailingslashit($pattern);
-            $pattern = strrev($pattern);
-			//add regex option
-			$pattern.='m'; //multiline
+            //$pattern = strrev($pattern); //reverse string
+            //$pattern = trailingslashit($pattern);
+            //$pattern = strrev($pattern);
             
             preg_match($pattern, $string, $matches);
 
             if (isset($matches[1]))
-                $result = $matches[1];
+                $result = strip_tags($matches[1]);
         }
         
         return apply_filters('xspf_plgen_dom_element_content',$result,$slug,$track,$selector,$pattern);

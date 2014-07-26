@@ -7,6 +7,7 @@ class xspf_plgen_wizard {
     
     function __construct($post_id = false) {
         $this->playlist = new xspf_plgen_playlist($post_id);
+        $this->playlist->is_wizard = true;
         $this->playlist->populate_tracks();
         
         $step_default = self::step_defaults();
@@ -16,7 +17,7 @@ class xspf_plgen_wizard {
             wp_parse_args(array(
                 'title'         => __('Playlist URL','xspf-plgen'),
                 'desc'          => __('Enter the URL of the page where the tracklist is displayed.','xspf-plgen'),
-                'error_codes'   => array('tracklist_url','tracklist_body_html')
+                'error_codes'   => array('tracklist_url','tracklist_page_empty')
             ),$step_default),
             
             wp_parse_args(array(
@@ -29,7 +30,7 @@ class xspf_plgen_wizard {
                 'title'  => __('Track Infos','xspf-plgen'),
                 'desc'          => sprintf('%s<br/>%s',
                                     __('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selectors</a> to extract the artist (eg. <code>h4 .artist strong</code>) and title (eg. <code>span</code>) for each track.','xspf-plgen'),
-                                    __('You can eventually use <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">regular expressions</a> to refine your matches.','xspf-plgen'))
+                                    __('You can eventually use <a href="http://regex101.com/" target="_blank">regular expressions</a> to refine your matches.','xspf-plgen'))
                                     
             ),$step_default),
             
@@ -257,7 +258,6 @@ class xspf_plgen_wizard {
     }
     
     function wizard_feedback($step_key){
-        
         $feedback = '';
         
         if (!$this->steps[$step_key]['feedback_box']) return $feedback;
@@ -265,8 +265,8 @@ class xspf_plgen_wizard {
         switch ($step_key){
             case 0:
                 if ($this->playlist->body_el){
-                    $body_html = $this->playlist->body_el->htmlOuter();
-                    $feedback = '<textarea class="output code html">'.$body_html.'</textarea>';
+                    $body_html = htmlspecialchars($this->playlist->body_el->htmlOuter());
+                    $feedback = '<pre><code class="output code html">'.$body_html.'</code></pre>';
                 }
             break;
             case 1:
@@ -276,8 +276,8 @@ class xspf_plgen_wizard {
                 
                 $feedback = '<div>';
                 foreach($tracklist_items as $track_el) {
-                    $track = pq($track_el)->html();
-                    $feedback .= '<textarea class="output code html">'.$track.'</textarea>';
+                    $track = htmlspecialchars(pq($track_el)->html());
+                    $feedback .= '<pre><code class="output code html">'.$track.'</code></pre>';
                 }
                 $feedback .= '</div>';
             break;
@@ -334,7 +334,8 @@ class xspf_plgen_wizard {
              */
             
             $save_args = wp_parse_args($args,$default_args);
-            $save_args = array_filter($save_args);
+
+            $save_args = array_filter($save_args);            
             $save_args = apply_filters('xspf_plgen_save_args',$save_args,$post_id);
 
             foreach ($save_args as $meta_key=>$meta_value){
@@ -354,9 +355,13 @@ class xspf_plgen_wizard {
     }
     static function get_field_value($slug){
         if (!isset($_POST['xspf-plgen'][$slug])) return false;
-        
         $value = $_POST['xspf-plgen'][$slug];
-
+        
+        //regex
+        if ( ($slug=='track_artist_regex') || ($slug=='track_title_regex') || ($slug=='track_album_regex') ){
+            $value = addslashes($value);
+        }
+        
         return $value;
     }
     
