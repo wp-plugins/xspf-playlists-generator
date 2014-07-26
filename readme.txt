@@ -26,7 +26,7 @@ You can check 'XSPF link' to add the playlist link before the post content, and 
 You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower), or embed a toma.hk playlist directly in your post.
  
 = Demo =
-See it in action [here](http://sandbox.pencil2d.org/xspf_plgen).
+See it in action [here](http://radios.pencil2d.org/xspf_plgen).
 
 = Import playlists from our HQ ! =
 We made an [XML export](https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml) of our stations. 
