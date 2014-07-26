@@ -97,3 +97,9 @@
     padding-left:0;
 }
 
+#xspf-plgen-wizard pre {
+    height:200px;
+    overflow-y: scroll;
+    background:#f9f9f9;
+}
+
