@@ -2,10 +2,10 @@
 /*
 Plugin Name: XSPF Playlists Generator
 Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
-Version: 0.1.6
+Version: 0.1.7
 Author: G.Breant
-Author URI: http://radios.pencil2d.org/xspf_plgen/
-Plugin URI: http://radios.pencil2d.org/xspf_plgen/
+Author URI: http://radios.pencil2d.org/
+Plugin URI: http://radios.pencil2d.org/
 License: GPL2
 */
 
@@ -19,12 +19,12 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.6';
+    public $version = '0.1.7';
 
     /**
     * @public string plugin DB version
     */
-    public $db_version = '100';
+    public $db_version = '107';
 
     /** Paths *****************************************************************/
 
@@ -48,7 +48,7 @@ class xspf_playlists_generator {
 
     var $admin;
 
-    public $post_type='xspf_plgen';
+    public $post_type='playlist';
     public $xpsf_render_var='xspf';
 
 
@@ -100,8 +100,9 @@ class xspf_playlists_generator {
 
     }
 
-    function setup_actions(){            
-
+    function setup_actions(){    
+        
+        add_action( 'plugins_loaded', array($this, 'upgrade'));//install and upgrade
         add_action( 'init', array(&$this,'register_post_type' ));
 
         add_action( 'init', array(&$this,'add_xspf_endpoint' ));            
@@ -116,23 +117,28 @@ class xspf_playlists_generator {
 
         add_filter( 'the_content', array(&$this,'the_content_links' ));
         add_filter( 'the_content', array(&$this,'the_content_tomahk_playlist' )); //singular
-        
-        //allow file upload
-        //add_action('post_edit_form_tag' , array( $this, 'post_edit_form_tag' ) );
 
     }
     
-        /**
-         * Add attributes to the form so we allow to upload files.
-         * @return type
-         */
-        
-        function post_edit_form_tag(){
-            //$post_type = get_post_type( get_the_ID() );
-            //if( $post_type != $this->post_type ) return;
-            echo ' enctype="multipart/form-data" encoding="multipart/form-data" ';
+    function upgrade(){
+        global $wpdb;
+
+        $db_option_name = '_xspf-plgen-db';
+        $current_version = get_option($db_option_name);
+
+        if ( $current_version==$this->db_version ) return false;
+
+        //install
+        if(!$current_version){
+            //handle SQL
+            //require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            //dbDelta($sql);
+            //add_option($option_name,$this->get_default_settings()); // add settings
         }
 
+        //upgrade DB version
+        update_option($db_option_name, $this->db_version );//upgrade DB version
+    }
 
     function scripts_styles(){
         wp_register_style( 'xspf-plgen', xspf_plgen()->plugin_url .'_inc/css/style.css',false,$this->version);
@@ -268,8 +274,6 @@ class xspf_playlists_generator {
             'public' => true,
             'show_ui' => true,
             'show_in_menu' => true,
-
-
             'show_in_nav_menus' => true,
             'publicly_queryable' => true,
             'exclude_from_search' => false,
