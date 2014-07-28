@@ -25,6 +25,8 @@ class xspf_plgen_playlist {
     var $errors;
     var $body_el;
     var $is_wizard = false; //special behaviour when wizard is enabled
+    
+    static $meta_key_settings = 'xspf_plgen_settings';
 
     function __construct($args = false){ //args or post id
         
@@ -38,7 +40,7 @@ class xspf_plgen_playlist {
         
         $default = self::get_default_args();
         $args = wp_parse_args($args,$default);
-        
+
         //regexes
         $args['track_artist_regex'] = stripslashes($args['track_artist_regex']);
         $args['track_title_regex'] = stripslashes($args['track_title_regex']);
@@ -77,17 +79,17 @@ class xspf_plgen_playlist {
         $post = get_post($post_id);
         
         $default = self::get_default_args();
-        
-        foreach ((array)$default as $meta_key=>$null){
-            $post_args[$meta_key] = get_post_meta($post_id, $meta_key, true);
-        }
-        
+        $metas = get_post_meta($post_id, self::$meta_key_settings, true);
+
+        $post_args = wp_parse_args($metas,$default);
+
         //pl title
         $post_args['playlist_title'] = get_the_title($post_id);
         //pl author
         $post_args['playlist_author'] = get_the_author_meta('user_nicename', $post->post_author );
         //pl info
         $post_args['playlist_info'] = get_permalink($post_id);
+        
         
         
         return $post_args;
@@ -171,7 +173,7 @@ class xspf_plgen_playlist {
     function populate_tracks(){
         
         $this->tracks = self::get_tracks();
-        
+
         do_action('xspf_plgen_populate_tracks',$this);
     }
 
@@ -195,10 +197,8 @@ class xspf_plgen_playlist {
             }
 
         }
-        
+
         if (empty($tracks)){
-
-
 
             if ( (!$this->is_wizard) && (!$this->track_artist_selector) ){
                 $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
@@ -211,14 +211,17 @@ class xspf_plgen_playlist {
             }
 
             $tracklist_items = self::get_tracklist();
+            
+            
 
             if ($tracklist_items){
 
+                
                 // Get all tracks
                 foreach($tracklist_items as $key=>$track) {
 
                     $newtrack = $this->new_track();
-
+                    
                     //artist
                     $newtrack['artist'] = strip_tags(self::get_dom_element_content($track,'artist'));
 

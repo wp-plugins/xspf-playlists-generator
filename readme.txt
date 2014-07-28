@@ -70,6 +70,8 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.9 =
+* Merged wizard settings into one single meta; + database update for previous versions
 = 0.1.8 =
 * new column "XSPF Requests" - shows how many times an XSPF playlist has been requested.
 * last (cached) track : admin column & template function

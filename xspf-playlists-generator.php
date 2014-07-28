@@ -2,7 +2,7 @@
 /*
 Plugin Name: XSPF Playlists Generator
 Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
-Version: 0.1.8
+Version: 0.1.9
 Author: G.Breant
 Author URI: http://radios.pencil2d.org/
 Plugin URI: http://radios.pencil2d.org/
@@ -21,12 +21,12 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.8';
+    public $version = '0.1.9';
 
     /**
     * @public string plugin DB version
     */
-    public $db_version = '107';
+    public $db_version = '109';
 
     /** Paths *****************************************************************/
 
@@ -133,7 +133,7 @@ class xspf_playlists_generator {
         $db_option_name = '_xspf-plgen-db';
         $current_version = get_option($db_option_name);
 
-        if ( $current_version==$this->db_version ) return false;
+        if ( $current_version==$this->db_version ) return;
 
         //install
         if(!$current_version){
@@ -141,6 +141,43 @@ class xspf_playlists_generator {
             //require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             //dbDelta($sql);
             //add_option($option_name,$this->get_default_settings()); // add settings
+        }
+        
+        //upgrade from 107 to 109 - merging settings into one single meta key
+        if ( $current_version < 109 ){
+            
+            $default = xspf_plgen_playlist::get_default_args();
+            $meta_key = xspf_plgen_playlist::$meta_key_settings;
+            $query_args = array(
+                'post_type'         => $this->post_type,
+                'posts_per_page'    => -1
+            );
+
+            $plquery = new WP_Query( $query_args );
+            
+            foreach((array)$plquery->posts as $post){
+                $new_meta = get_post_meta($post->ID, $meta_key, true);
+                if ($new_meta) continue;
+                
+                $post_args = array();
+                
+                foreach ((array)$default as $slug=>$null){
+                    $post_args[$slug] = get_post_meta($post->ID, $slug, true);
+                }
+                
+                foreach((array)$post_args as $slug=>$value){
+                    if ( $value==$default[$slug] ) continue; //is default value
+                    $meta[$slug] = $value;
+                }
+                
+                $meta = array_filter($meta);
+
+                if (update_post_meta($post->ID, $meta_key, $meta)){
+                    foreach ((array)$default as $slug=>$null){
+                        delete_post_meta($post->ID, $slug);
+                    }
+                }
+            }
         }
 
         //upgrade DB version

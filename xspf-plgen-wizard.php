@@ -168,7 +168,7 @@ class xspf_plgen_wizard {
                     ?>
                     <!-- MusicBrainz -->
                     <div>
-                        <input name="<?php $this->field_name('musicbrainz');?>" type="checkbox"<?php checked($this->playlist->musicbrainz);?> value="1"/>
+                        <input name="<?php $this->field_name('musicbrainz');?>" type="checkbox"<?php checked((bool)$this->playlist->musicbrainz);?> value="1"/>
                         <label style="display:inline" for="<?php $this->field_name('musicbrainz');?>"><?php _e('Compare tracks informations with <a href="http://musicbrainz.org/" target="_blank">MusicBrainz</a>','xspf-plgen');?></label>
                         <p class="xspf-plgen-info">
                             <?php _e('Sometimes, the metadatas (title,artist,...) of the tracks are not corrects.  Enabling this will make MusicBrainz try to correct wrong values.','xspf-plgen');?><br/>
@@ -178,7 +178,7 @@ class xspf_plgen_wizard {
 
                     <!-- XSPF link embed -->
                     <div>
-                        <input name="<?php $this->field_name('xspf_link');?>" type="checkbox"<?php checked($this->playlist->xspf_link);?> value="1"/>
+                        <input name="<?php $this->field_name('xspf_link');?>" type="checkbox"<?php checked((bool)$this->playlist->xspf_link);?> value="1"/>
                         <label style="display:inline" for="<?php $this->field_name('xspf_link');?>"><?php _e('XSPF link','xspf-plgen');?></label>
                         <p class="xspf-plgen-info">
                             <?php _e('Adds automatically an XPSF link to your post content.','xspf-plgen');?><br/>
@@ -188,7 +188,7 @@ class xspf_plgen_wizard {
 
                     <!-- Toma.hk embed -->
                     <div>
-                        <input name="<?php $this->field_name('tomahk_embed');?>" type="checkbox"<?php checked($this->playlist->tomahk_embed);?> value="1"/>
+                        <input name="<?php $this->field_name('tomahk_embed');?>" type="checkbox"<?php checked((bool)$this->playlist->tomahk_embed);?> value="1"/>
                         <label style="display:inline" for="<?php $this->field_name('tomahk_embed');?>"><?php _e('Embed playlist from <a href="http://toma.hk/tools/embeds.php" target="_blank">Toma.hk</a>','xspf-plgen');?></label>
                         <p class="xspf-plgen-info">
                             <?php _e('Displays the playlist generated from the toma.hk website, under your post.','xspf-plgen');?><br/>
@@ -306,42 +306,24 @@ class xspf_plgen_wizard {
     
     
     static function wizard_save($post_id){
-
-            $args = array(
-                'tracklist_url'   => self::get_field_value('tracklist_url'),
-                'tracks_selector' => self::get_field_value('tracks_selector'),
-                'track_artist_selector' => self::get_field_value('track_artist_selector'),
-                'track_artist_regex' => self::get_field_value('track_artist_regex'),
-                'track_title_selector' => self::get_field_value('track_title_selector'),
-                'track_title_regex' => self::get_field_value('track_title_regex'),
-                'track_album_selector' => self::get_field_value('track_album_selector'),
-                'track_album_art_selector' => self::get_field_value('track_album_art_selector'),
-                'track_album_regex' => self::get_field_value('track_album_regex'),
-                'track_comment_selector' => self::get_field_value('track_comment_selector'),
-                'musicbrainz' => (bool)self::get_field_value('musicbrainz'),
-                'tomahk_embed' => (bool)self::get_field_value('tomahk_embed'),
-                'xspf_link' => (bool)self::get_field_value('xspf_link'),
-            );
-            
+        
+            $args = array();
             $default_args = xspf_plgen_playlist::get_default_args();
-
-            /*
-            foreach ((array)$default_args as $meta_key=>$null){
-                if (!isset($args[$meta_key])) continue;
-                $save_args[$meta_key] = $args[$meta_key];
-            }
-             */
             
-            $save_args = wp_parse_args($args,$default_args);
+            foreach ( (array)$default_args as $slug => $default ){
+                $args[$slug] = self::get_field_value($slug);
+            }
+       
+            $args = apply_filters('xspf_plgen_save_args',$args,$post_id);
 
-            $save_args = array_filter($save_args);            
-            $save_args = apply_filters('xspf_plgen_save_args',$save_args,$post_id);
-
-            foreach ($save_args as $meta_key=>$meta_value){
-                update_post_meta($post_id, $meta_key,$meta_value);
+            //remove default values
+            foreach ( $args as $slug => $value ){
+                if ( $value==$default_args[$slug] ) unset($args[$slug]);
             }
 
-            do_action('xspf_plgen_save', $save_args, $post_id);
+            update_post_meta( $post_id, xspf_plgen_playlist::$meta_key_settings, $args );
+
+            do_action('xspf_plgen_save', $args, $post_id);
 
     }
     
@@ -353,12 +335,20 @@ class xspf_plgen_wizard {
         return 'xspf-plgen['.$slug.']';
     }
     static function get_field_value($slug){
+        
+        $bools = array('musicbrainz','tomahk_embed','xspf_link');
+        
         if (!isset($_POST['xspf-plgen'][$slug])) return false;
         $value = $_POST['xspf-plgen'][$slug];
         
         //regex
         if ( ($slug=='track_artist_regex') || ($slug=='track_title_regex') || ($slug=='track_album_regex') ){
             $value = addslashes($value);
+        }
+        
+        //bools
+        if ( in_array($slug,$bools) ){
+            $value = (bool)$value;
         }
         
         return $value;
