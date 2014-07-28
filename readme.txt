@@ -71,6 +71,7 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 
 == Changelog ==
 = 0.1.8 =
+* new column "XSPF Requests" - shows how many times an XSPF playlist has been requested.
 * last (cached) track : admin column & template function
 * 2 minutes cache for get_tracks()
 * xspf_plgen_get_health() : each time tracks are populated, check if tracks are found. Health is calculated on this.

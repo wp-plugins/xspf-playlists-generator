@@ -171,6 +171,8 @@ class xspf_plgen_playlist {
     function populate_tracks(){
         
         $this->tracks = self::get_tracks();
+        
+        do_action('xspf_plgen_populate_tracks',$this);
     }
 
     
@@ -433,7 +435,7 @@ class xspf_plgen_playlist {
         
         $this->populate_tracks();
         
-        do_action('xspf_plgen_get_tracks',$this);
+        do_action('xspf_plgen_get_xpls',$this);
 
 
         if(empty($this->tracks)) { //display error message inside playlist

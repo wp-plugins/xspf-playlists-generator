@@ -9,6 +9,8 @@ Plugin URI: http://radios.pencil2d.org/
 License: GPL2
 */
 
+//Hatchet.is API : https://api.hatchet.is/apidocs/#!/playlists
+
 class xspf_playlists_generator {
     
     public $name = 'XSPF Playlists Generator';

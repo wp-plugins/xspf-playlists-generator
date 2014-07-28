@@ -82,8 +82,16 @@ function xspf_plgen_get_last_track($post_id = false){
     }
     
     return apply_filters('xspf_plgen_get_last_track',$output,$post_id);
-    
-    
+
+}
+
+/*
+ * Get the number of time an XSPF file has been requested
+ */
+
+function xspf_plgen_get_xspf_request_count($post_id = false){
+    if (!$post_id) $post_id = get_the_ID();
+    return (int)get_post_meta($post_id, xspf_plgen_stats::$request_count_key, true);
 }
 
 
