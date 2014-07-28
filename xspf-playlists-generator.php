@@ -2,7 +2,7 @@
 /*
 Plugin Name: XSPF Playlists Generator
 Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
-Version: 0.1.7
+Version: 0.1.8
 Author: G.Breant
 Author URI: http://radios.pencil2d.org/
 Plugin URI: http://radios.pencil2d.org/
@@ -19,7 +19,7 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.7';
+    public $version = '0.1.8';
 
     /**
     * @public string plugin DB version
@@ -50,6 +50,10 @@ class xspf_playlists_generator {
 
     public $post_type='playlist';
     public $xpsf_render_var='xspf';
+    
+
+    var $cache_tracks_key = 'xspf_plgen_tracks_cache'; //cache tracks key name
+    var $cache_tracks_intval = 120; // validity of tracks cache, in seconds
 
 
     public static function instance() {
@@ -89,7 +93,8 @@ class xspf_playlists_generator {
         }
         
 
-        require($this->plugin_dir . 'xspf-plgen-classes.php');
+        require($this->plugin_dir . 'xspf-plgen-playlist.php');
+        require( xspf_plgen()->plugin_dir . 'xspf-plgen-stats.php' );
         require($this->plugin_dir . 'xspf-plgen-templates.php');
 
         //admin

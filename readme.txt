@@ -70,6 +70,12 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.1.8 =
+* last (cached) track : admin column & template function
+* 2 minutes cache for get_tracks()
+* xspf_plgen_get_health() : each time tracks are populated, check if tracks are found. Health is calculated on this.
+* improved get_tracks()
+* splitted files
 = 0.1.7 =
 * renamed post type from 'xspf_plgen' to 'playlist'.  See http://stackoverflow.com/a/14918890/782013 to update your database if needed.
 = 0.1.6 =

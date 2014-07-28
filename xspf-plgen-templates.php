@@ -30,6 +30,62 @@ function xspf_plgen_get_xspf_permalink($post_id=false){
 
 }
 
+/*
+ * Checks if the playlist is still alive : each time tracks are populated,
+ * A "health" meta is added with the time and number of tracks found.
+ * If health fell to zero, maybe the playlist is no more alive.
+ */
+
+function xspf_plgen_get_health($post_id){
+
+    $metas = get_post_meta($post_id, xspf_plgen_stats::$health_key, true);
+
+    //no entries
+    if ( empty($metas) ) return false;
+
+    $total = count($metas);
+    $health = 0;
+
+    foreach ($metas as $meta){
+        if ($meta['tracks'] == 0) continue;
+        $health++;
+    }
+
+    $percent = ($health / $total)*100;
+
+    return $percent;     
+
+}
+
+/**
+ * Get the cache for a playlist
+ * @param type $post_id
+ * @return array('time'=>,'tracks'=>)
+ */
+function xspf_plgen_get_tracks_cache($post_id){
+    return get_post_meta($post_id, xspf_plgen()->cache_tracks_key, true);
+}
+
+function xspf_plgen_get_last_track($post_id = false){
+    
+    $output = null;
+    
+    if (!$post_id) $post_id = get_the_ID();
+    
+    $cache = xspf_plgen_get_tracks_cache($post_id);
+
+    if (isset($cache['tracks'])){
+        $last_track = end($cache['tracks']);
+        if (isset($last_track['title']) && isset($last_track['artist'])){
+            $output = sprintf(__('<span class="track-title">%1$s</span> by <span class="track-artist">%2$s</span>','xspf_plgen'),$last_track['title'],$last_track['artist']);
+        }
+    }
+    
+    return apply_filters('xspf_plgen_get_last_track',$output,$post_id);
+    
+    
+}
+
 
 
 /**
@@ -167,6 +223,8 @@ function xspf_get_classes($classes){
     if (empty($classes)) return;
     return' class="'.implode(' ',$classes).'"';
 }
+
+
 
 
 ?>

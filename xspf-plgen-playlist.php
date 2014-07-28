@@ -14,7 +14,7 @@ class xspf_plgen_playlist {
     var $track_album_regex;
     var $track_album_art_selector;
     var $track_comment_selector;
-    var $tracks_limit;
+    var $max_tracks;
     var $musicbrainz;
     var $tomahk_embed;
     var $xspf_link;
@@ -64,10 +64,10 @@ class xspf_plgen_playlist {
             'track_album_regex'         => null,
             'track_album_art_selector'  => null,
             'track_comment_selector'    => null,
-            'tracks_limit'              => false,   //max titles
+            'max_tracks'                => 15,   //max titles
             'musicbrainz'               => false,   //check tracks with musicbrainz
             'tomahk_embed'              => true,
-            'xspf_link'                 => true
+            'xspf_link'                 => true,
         );
         return $default;
     }
@@ -169,72 +169,137 @@ class xspf_plgen_playlist {
     }
     
     function populate_tracks(){
-        $tracks = self::get_tracks();
         
-        //clean inputs
-        foreach ((array)$tracks as $key=>$track){
-            $tracks[$key] = $this->format_trackinfo($track);
-        }
-        
-        //array unique
-        $this->tracks = array_unique((array)$tracks, SORT_REGULAR);
-        
-        
+        $this->tracks = self::get_tracks();
     }
 
     
     function get_tracks(){
+        
+        $tracks = array();
 
-        if ( (!$this->is_wizard) && (!$this->track_artist_selector) ){
-            $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
-            return false;
+        // if last call to get_tracks() is <2min, 
+        // return cached tracks
+
+        if ( (!$this->is_wizard) && ($this->post_id) ){
+            
+            $cachemeta =  xspf_plgen_get_tracks_cache($this->post_id);
+            
+            if ( isset($cachemeta['time']) && isset($cachemeta['tracks'] ) ){
+
+                $limit = current_time( 'timestamp' ) - $cachemeta['time'];
+                if (xspf_plgen()->cache_tracks_intval > $limit) $tracks = $cachemeta['tracks'];
+                
+            }
+
         }
         
-        if ( (!$this->is_wizard) && (!$this->track_title_selector) ){
-            $this->errors->add( 'tracks_selector_empty', __('The track title selector is empty','xspf-plgen') );
-            return false;
-        }
-        
-        $tracklist_items = self::get_tracklist();
+        if (empty($tracks)){
 
-        if (!$tracklist_items) return false;
 
-        // Get all tracks
-        foreach($tracklist_items as $key=>$track) {
 
-            $newtrack = $this->new_track();
-            
-            //artist
-            $newtrack['artist'] = strip_tags(self::get_dom_element_content($track,'artist'));
+            if ( (!$this->is_wizard) && (!$this->track_artist_selector) ){
+                $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspf-plgen') );
+                return false;
+            }
 
-            //title
-            $newtrack['title'] = strip_tags(self::get_dom_element_content($track,'title'));
+            if ( (!$this->is_wizard) && (!$this->track_title_selector) ){
+                $this->errors->add( 'tracks_selector_empty', __('The track title selector is empty','xspf-plgen') );
+                return false;
+            }
 
-            //album
-            if($this->track_album_selector)
-                $newtrack['album'] = strip_tags(self::get_dom_element_content($track,'album'));
-            
-            //picture
-            if($this->track_album_art_selector){
-                $url = pq($track)->find($this->track_album_art_selector)->attr('src');
-                if(filter_var($url, FILTER_VALIDATE_URL)){
-                    $newtrack['image'] = $url;
+            $tracklist_items = self::get_tracklist();
+
+            if ($tracklist_items){
+
+                // Get all tracks
+                foreach($tracklist_items as $key=>$track) {
+
+                    $newtrack = $this->new_track();
+
+                    //artist
+                    $newtrack['artist'] = strip_tags(self::get_dom_element_content($track,'artist'));
+
+                    //title
+                    $newtrack['title'] = strip_tags(self::get_dom_element_content($track,'title'));
+
+                    //album
+                    if($this->track_album_selector)
+                        $newtrack['album'] = strip_tags(self::get_dom_element_content($track,'album'));
+
+                    //picture
+                    if($this->track_album_art_selector){
+                        $url = pq($track)->find($this->track_album_art_selector)->attr('src');
+                        if(filter_var($url, FILTER_VALIDATE_URL)){
+                            $newtrack['image'] = $url;
+                        }
+                    }
+
+
+                    //comment
+                    /*
+                    $time = pq($track)->find($this->track_album_art_selector)->htmlOuter();
+                    $newtrack['comments'][] = sprintf('played %s', $time); //x min ago
+                     */
+
+                    //format all
+
+                    $tracks[]=$newtrack;
+                }
+
+            }
+
+            //clean inputs
+            foreach ((array)$tracks as $key=>$track){
+                $tracks[$key] = $this->format_trackinfo($track);
+            }
+
+            //remove songs where there is no artist+title
+            if (!$this->is_wizard){
+                foreach ((array)$tracks as $key=>$track){
+
+                    if(!$track['artist'] || !$track['title']){
+                        unset($tracks[$key]);
+                    }
                 }
             }
-                
 
-            //comment
-            /*
-            $time = pq($track)->find($this->track_album_art_selector)->htmlOuter();
-            $newtrack['comments'][] = sprintf('played %s', $time); //x min ago
-             */
+            //array unique
+            $tracks = array_unique($tracks, SORT_REGULAR);
 
-            //format all
+            //limit tracklist
+            if ($this->max_tracks){
+                $tracks = array_slice($tracks, 0, (int)$this->max_tracks);
+            }
 
-            $newtracks[]=$newtrack;
+            //some radios have bad metadatas
+            //try to correct them using musicbrainz.
+            //ignore while running wizard.
+            if ((!$this->is_wizard) && ($this->musicbrainz)){
+
+                foreach ((array)$tracks as $key=>$track){
+                    $tracks[$key] = $this->musicbrainz_lookup($track);
+
+                    if (count($tracks)>1){//delay of 1 sec
+                        sleep(1);
+                    }
+
+                }
+
+            }
+
+            //save time & tracks
+            if ($this->post_id){
+                $cachemeta = array(
+                    'time'      => current_time( 'timestamp' ),
+                    'tracks'    => $tracks
+                );
+                update_post_meta($this->post_id, xspf_plgen()->cache_tracks_key, $cachemeta);
+            }
+            
         }
 
-        return $newtracks;
+        return apply_filters('xspf_plgen_tracks',$tracks);
         
     }
     
@@ -365,40 +430,18 @@ class xspf_plgen_playlist {
     }
     
     function get_xpls(){
-
+        
         $this->populate_tracks();
-
-        //remove songs where there is no artist+title
-        foreach ((array)$this->tracks as $key=>$track){
-            
-            if(!$track['artist'] || !$track['title']){
-                unset($this->tracks[$key]);
-            }
-        }
         
-        
-        //limit to 15 songs so the query is not too long.
-        $this->tracks = array_slice((array)$this->tracks, 0, 15);
+        do_action('xspf_plgen_get_tracks',$this);
 
-        if(!$this->tracks) { //display error message inside playlist
+
+        if(empty($this->tracks)) { //display error message inside playlist
             
             $this->tracks[] = array(
                 'artist'    => xspf_plgen()->name,
                 'title'     => sprintf(__('Error : no tracks found / we were unable to parse the tracks for "%s"',"xspf_plgen"),$this->playlist_title)
             );
-
-        }elseif($this->musicbrainz){
-            //some radios have bad metadatas
-            //handle this with musicbrainz lookup
-
-            foreach ((array)$this->tracks as $key=>$track){
-                $this->tracks[$key] = $this->musicbrainz_lookup($track);
-                
-                if (count($this->tracks)>1){//delay of 1 sec
-                    sleep(1);
-                }
-                
-            }
 
         }
         
