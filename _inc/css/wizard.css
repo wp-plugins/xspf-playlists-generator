@@ -1,41 +1,41 @@
-#xspf-plgen-wizard input[type=text]{
+#xspfpl-wizard input[type=text]{
     width:100%;
 }
 
-#xspf-plgen-wizard #xspf-wizard-step-3 label {
+#xspfpl-wizard #xspf-wizard-step-3 label {
     font-weight: bold;
     width: 20%;
     display: inline-block;
 }
 
-#xspf-plgen-wizard #xspf-wizard-step-3 input.selector{
+#xspfpl-wizard #xspf-wizard-step-3 input.selector{
     width:50%;
 }
 
 
-#xspf-plgen-wizard .regex-wrapper{
+#xspfpl-wizard .regex-wrapper{
     color:#999;
     display:none;
     padding:5px;
 }
 
-#xspf-plgen-wizard .regex-wrapper .code:before{
+#xspfpl-wizard .regex-wrapper .code:before{
     content:'/';
     width:10px;
 }
-#xspf-plgen-wizard .regex-wrapper .code:after{
+#xspfpl-wizard .regex-wrapper .code:after{
     content:'/m';
 }
-#xspf-plgen-wizard .regex-wrapper input.regex{
+#xspfpl-wizard .regex-wrapper input.regex{
     width:60%;
     color:#000;
     color:#999;
 }
 
-#xspf-plgen-wizard label{
+#xspfpl-wizard label{
     font-weight: bold;
 }
-#xspf-plgen-wizard span,#xspf-plgen-wizard p{
+#xspfpl-wizard span,#xspfpl-wizard p{
     color:#999;
 }
 
@@ -52,29 +52,29 @@
     padding:10px;
 }
 
-#xspf-plgen-wizard #xspf-wizard-step-3 {
+#xspfpl-wizard #xspf-wizard-step-3 {
     margin-left:10px;
     padding-left:10px;
     border-left:5px solid #DDD;
 }
 
-#xspf-plgen-wizard #xspf-wizard-step-3 .track-info{
+#xspfpl-wizard #xspf-wizard-step-3 .track-info{
     margin-bottom:10px;
 }
 
-#xspf-plgen-wizard .feedback-link{
+#xspfpl-wizard .feedback-link{
     float:right;
     display:none;
 }
-#xspf-plgen-wizard .xspf-wizard-step-title{
+#xspfpl-wizard .xspf-wizard-step-title{
     clear:left;
     display:inline;
 }
 
-#xspf-plgen-wizard .feedback-content{
+#xspfpl-wizard .feedback-content{
     display:none;
 }
-#xspf-plgen-wizard.has-errors .feedback-content{
+#xspfpl-wizard.has-errors .feedback-content{
     display:inherit;
 }
 
@@ -87,7 +87,7 @@
     direction: ltr;
 }
 
-#xspf-plgen-wizard .feedback-wrapper .output{
+#xspfpl-wizard .feedback-wrapper .output{
     width: 100%;
 }
 .step-error{
@@ -97,7 +97,7 @@
     padding-left:0;
 }
 
-#xspf-plgen-wizard pre {
+#xspfpl-wizard pre {
     height:200px;
     overflow-y: scroll;
     background:#f9f9f9;

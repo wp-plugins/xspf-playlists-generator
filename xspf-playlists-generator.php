@@ -1,17 +1,20 @@
 <?php
 /*
-Plugin Name: XSPF Playlists Generator
-Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
-Version: 0.1.9
-Author: G.Breant
-Author URI: http://radios.pencil2d.org/
-Plugin URI: http://radios.pencil2d.org/
-License: GPL2
-*/
+ * Plugin Name: XSPF Playlists Generator
+ * Plugin URI: http://radios.pencil2d.org
+ * Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
+ * Author: G.Breant
+ * Version: 0.2.0
+ * Author URI: http://radios.pencil2d.org
+ * License: GPL2+
+ * Text Domain: xspfpl
+ * Domain Path: /languages/
+ */
+
 
 //Hatchet.is API : https://api.hatchet.is/apidocs/#!/playlists
 
-class xspf_playlists_generator {
+class XSPFPL_Core {
     
     public $name = 'XSPF Playlists Generator';
     public $author = 'G.Breant';
@@ -21,12 +24,12 @@ class xspf_playlists_generator {
     /**
     * @public string plugin version
     */
-    public $version = '0.1.9';
+    public $version = '0.2.0';
 
     /**
     * @public string plugin DB version
     */
-    public $db_version = '109';
+    public $db_version = '110';
 
     /** Paths *****************************************************************/
 
@@ -52,15 +55,15 @@ class xspf_playlists_generator {
 
     public $post_type='playlist';
     public $xpsf_render_var='xspf';
-    
 
-    var $cache_tracks_key = 'xspf_plgen_tracks_cache'; //cache tracks key name
     var $cache_tracks_intval = 120; // validity of tracks cache, in seconds
+    
+    static $meta_key_db_version = 'xspfpl-db';
 
 
     public static function instance() {
             if ( ! isset( self::$instance ) ) {
-                    self::$instance = new xspf_playlists_generator;
+                    self::$instance = new XSPFPL_Core;
                     self::$instance->setup_globals();
                     self::$instance->includes();
                     self::$instance->setup_actions();
@@ -94,15 +97,15 @@ class xspf_playlists_generator {
             require($this->plugin_dir . '_inc/lib/phpQuery/phpQuery.php');
         }
         
-
-        require($this->plugin_dir . 'xspf-plgen-playlist.php');
-        require( xspf_plgen()->plugin_dir . 'xspf-plgen-stats.php' );
-        require($this->plugin_dir . 'xspf-plgen-templates.php');
+        require( $this->plugin_dir . 'xspfpl-wizard.php' );
+        require( $this->plugin_dir . 'xspfpl-playlist.php');
+        require( $this->plugin_dir . 'xspfpl-playlist-stats.php' );
+        require( $this->plugin_dir . 'xspfpl-templates.php');
 
         //admin
         if(is_admin()){
-            require($this->plugin_dir . 'xspf-plgen-admin.php');
-            $this->admin = new xspf_plgen_admin();
+            require($this->plugin_dir . 'xspfpl-admin.php');
+            $this->admin = new XSPFPL_Admin_Wizard();
         }
 
     }
@@ -127,11 +130,71 @@ class xspf_playlists_generator {
 
     }
     
-    function upgrade(){
+    //needed for 109 update. We can remove this after a while.
+    function update_meta_key( $old_key=null, $new_key=null ){
         global $wpdb;
 
-        $db_option_name = '_xspf-plgen-db';
-        $current_version = get_option($db_option_name);
+        $query = "UPDATE ".$wpdb->prefix."postmeta SET meta_key = '".$new_key."' WHERE meta_key = '".$old_key."'";
+        $results = $wpdb->get_results( $query, ARRAY_A );
+
+        return $results;
+    }
+    
+    function upgrade(){
+        global $wpdb;
+        
+        //upgrade from 109
+        $old_db_option_name = '_xspf-plgen-db';
+;        if ($current_version = get_option($old_db_option_name)){
+            
+            //upgrade from 107 to 109 - merging settings into one single meta key
+            if ( $current_version < 109 ){
+
+                $default = XSPFPL_Single_Playlist::get_default_args();
+                $meta_key = XSPFPL_Single_Playlist::$meta_key_settings;
+                $query_args = array(
+                    'post_type'         => $this->post_type,
+                    'posts_per_page'    => -1
+                );
+
+                $plquery = new WP_Query( $query_args );
+
+                foreach((array)$plquery->posts as $post){
+                    $new_meta = get_post_meta($post->ID, $meta_key, true);
+                    if ($new_meta) continue;
+
+                    $post_args = array();
+
+                    foreach ((array)$default as $slug=>$null){
+                        $post_args[$slug] = get_post_meta($post->ID, $slug, true);
+                    }
+
+                    foreach((array)$post_args as $slug=>$value){
+                        if ( $value==$default[$slug] ) continue; //is default value
+                        $meta[$slug] = $value;
+                    }
+
+                    $meta = array_filter($meta);
+
+                    if (update_post_meta($post->ID, $meta_key, $meta)){
+                        foreach ((array)$default as $slug=>$null){
+                            delete_post_meta($post->ID, $slug);
+                        }
+                    }
+                }
+            }
+            
+            //rename post meta keys
+            self::update_meta_key('xspf_plgen_settings',XSPFPL_Single_Playlist::$meta_key_settings );
+            self::update_meta_key('xspf_plgen_health',XSPFPL_Single_Playlist::$meta_key_health );
+            self::update_meta_key('xspf_plgen_xspf_request_count',XSPFPL_Single_Playlist::$meta_key_requests );
+            self::update_meta_key('xspf_plgen_tracks_cache',XSPFPL_Single_Playlist::$meta_key_tracks_cache );
+            delete_option( $old_db_option_name );
+            
+        }
+
+        //> 109
+        $current_version = get_option(self::$meta_key_db_version);
 
         if ( $current_version==$this->db_version ) return;
 
@@ -142,51 +205,14 @@ class xspf_playlists_generator {
             //dbDelta($sql);
             //add_option($option_name,$this->get_default_settings()); // add settings
         }
-        
-        //upgrade from 107 to 109 - merging settings into one single meta key
-        if ( $current_version < 109 ){
-            
-            $default = xspf_plgen_playlist::get_default_args();
-            $meta_key = xspf_plgen_playlist::$meta_key_settings;
-            $query_args = array(
-                'post_type'         => $this->post_type,
-                'posts_per_page'    => -1
-            );
-
-            $plquery = new WP_Query( $query_args );
-            
-            foreach((array)$plquery->posts as $post){
-                $new_meta = get_post_meta($post->ID, $meta_key, true);
-                if ($new_meta) continue;
-                
-                $post_args = array();
-                
-                foreach ((array)$default as $slug=>$null){
-                    $post_args[$slug] = get_post_meta($post->ID, $slug, true);
-                }
-                
-                foreach((array)$post_args as $slug=>$value){
-                    if ( $value==$default[$slug] ) continue; //is default value
-                    $meta[$slug] = $value;
-                }
-                
-                $meta = array_filter($meta);
-
-                if (update_post_meta($post->ID, $meta_key, $meta)){
-                    foreach ((array)$default as $slug=>$null){
-                        delete_post_meta($post->ID, $slug);
-                    }
-                }
-            }
-        }
 
         //upgrade DB version
-        update_option($db_option_name, $this->db_version );//upgrade DB version
+        update_option(self::$meta_key_db_version, $this->db_version );//upgrade DB version
     }
 
     function scripts_styles(){
-        wp_register_style( 'xspf-plgen', xspf_plgen()->plugin_url .'_inc/css/style.css',false,$this->version);
-        wp_enqueue_style( 'xspf-plgen' );
+        wp_register_style( 'xspfpl', xspfpl()->plugin_url .'_inc/css/style.css',false,$this->version);
+        wp_enqueue_style( 'xspfpl' );
     }
     
     /**
@@ -218,7 +244,7 @@ class xspf_playlists_generator {
         if (get_post_type()!=$this->post_type) return false;
         if (!is_singular()) return false;
 
-        $this->post_playlist = new xspf_plgen_playlist(get_the_ID());
+        $this->post_playlist = new XSPFPL_Single_Playlist(get_the_ID());
 
 
     }
@@ -252,20 +278,20 @@ class xspf_playlists_generator {
         
         $new_content='';
 
-        $link_xspf = xspf_plgen_get_xspf_permalink();
+        $link_xspf = xspfpl_get_xspf_permalink();
 
-        $link_tomahk = xspf_plgen_get_tomahk_playlist_link();
+        $link_tomahk = xspfpl_get_tomahk_playlist_link();
         
         if($link_xspf)
-            $new_content .= '<a href="'.$link_xspf.'" class="xspf-plgen-link"><b>'.__('Link to XSPF file','xspf-plgen').'</b></a>';
+            $new_content .= '<a href="'.$link_xspf.'" class="xspfpl-link"><b>'.__('Link to XSPF file','xspfpl').'</b></a>';
         
         if(!is_singular()){
             if($link_tomahk)
-                $new_content .= '<a href="'.$link_tomahk.'" class="xspf-plgen-link"><b>'.__('Toma.hk Playlist','xspf-plgen').'</b></a>';
+                $new_content .= '<a href="'.$link_tomahk.'" class="xspfpl-link"><b>'.__('Toma.hk Playlist','xspfpl').'</b></a>';
         }
         
 
-        $content='<p class="xspf-plgen-links">'.$new_content.'</p>'.$content;
+        $content='<p class="xspfpl-links">'.$new_content.'</p>'.$content;
 
         return $content;
 
@@ -287,7 +313,7 @@ class xspf_playlists_generator {
 
         if(!is_singular()) return $content;
         
-        $content.=xspf_plgen_get_tomahk_playlist();
+        $content.=xspfpl_get_tomahk_playlist();
 
         return $content;
 
@@ -295,18 +321,18 @@ class xspf_playlists_generator {
     function register_post_type() {
 
         $labels = array( 
-            'name' => _x( 'Playlist Parsers', 'xspf-plgen' ),
-            'singular_name' => _x( 'Playlist Parser', 'xspf-plgen' ),
-            'add_new' => _x( 'Add New', 'xspf-plgen' ),
-            'add_new_item' => _x( 'Add New Playlist Parser', 'xspf-plgen' ),
-            'edit_item' => _x( 'Edit Playlist Parser', 'xspf-plgen' ),
-            'new_item' => _x( 'New Playlist Parser', 'xspf-plgen' ),
-            'view_item' => _x( 'View Playlist Parser', 'xspf-plgen' ),
-            'search_items' => _x( 'Search Playlist Parsers', 'xspf-plgen' ),
-            'not_found' => _x( 'No playlist parsers found', 'xspf-plgen' ),
-            'not_found_in_trash' => _x( 'No playlist parsers found in Trash', 'xspf-plgen' ),
-            'parent_item_colon' => _x( 'Parent Playlist Parser:', 'xspf-plgen' ),
-            'menu_name' => _x( 'Playlist Parsers', 'xspf-plgen' ),
+            'name' => _x( 'Playlist Parsers', 'xspfpl' ),
+            'singular_name' => _x( 'Playlist Parser', 'xspfpl' ),
+            'add_new' => _x( 'Add New', 'xspfpl' ),
+            'add_new_item' => _x( 'Add New Playlist Parser', 'xspfpl' ),
+            'edit_item' => _x( 'Edit Playlist Parser', 'xspfpl' ),
+            'new_item' => _x( 'New Playlist Parser', 'xspfpl' ),
+            'view_item' => _x( 'View Playlist Parser', 'xspfpl' ),
+            'search_items' => _x( 'Search Playlist Parsers', 'xspfpl' ),
+            'not_found' => _x( 'No playlist parsers found', 'xspfpl' ),
+            'not_found_in_trash' => _x( 'No playlist parsers found in Trash', 'xspfpl' ),
+            'parent_item_colon' => _x( 'Parent Playlist Parser:', 'xspfpl' ),
+            'menu_name' => _x( 'Playlist Parsers', 'xspfpl' ),
         );
 
         $args = array( 
@@ -344,11 +370,11 @@ class xspf_playlists_generator {
  *
  */
 
-function xspf_plgen() {
-	return xspf_playlists_generator::instance();
+function xspfpl() {
+	return XSPFPL_Core::instance();
 }
 
-xspf_plgen();
+xspfpl();
 
 
 
