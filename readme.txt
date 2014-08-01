@@ -70,6 +70,8 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 1. Metabox shown under the editor, used to parse a web playlist
 
 == Changelog ==
+= 0.2.1 =
+* fixed bug in post_column_register()
 = 0.2.0 =
 * Clean-up on filenames, class names, meta key names.
 = 0.1.9 =

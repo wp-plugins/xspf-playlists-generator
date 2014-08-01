@@ -45,7 +45,7 @@ class XSPFPL_Playlist_Stats {
 
     function post_column_register($defaults){
         
-        if ( get_post_type() != xspfpl()->post_type) return;
+        if ( get_post_type() != xspfpl()->post_type) return $defaults;
         
         $defaults[$this->column_name_last_track] = __('Last track','xspfpl');
         $defaults[$this->column_name_health] = __('Health','xspfpl');

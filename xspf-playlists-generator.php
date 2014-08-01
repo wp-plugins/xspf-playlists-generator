@@ -4,7 +4,7 @@
  * Plugin URI: http://radios.pencil2d.org
  * Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
  * Author: G.Breant
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author URI: http://radios.pencil2d.org
  * License: GPL2+
  * Text Domain: xspfpl
@@ -24,7 +24,7 @@ class XSPFPL_Core {
     /**
     * @public string plugin version
     */
-    public $version = '0.2.0';
+    public $version = '0.2.1';
 
     /**
     * @public string plugin DB version
