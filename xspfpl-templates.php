@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Here's all the function you could need in your templates.
+ */
+
 
 /**
  * Get the XSPF link for a post.
@@ -12,9 +16,7 @@
 function xspfpl_get_xspf_permalink($post_id=false){
     global $wp_rewrite;
 
-    if(!$post_id){
-        $post_id = get_the_ID();
-    }
+    if(!$post_id) $post_id = get_the_ID();
 
     $post_permalink = get_permalink($post_id);
 
@@ -37,6 +39,10 @@ function xspfpl_get_xspf_permalink($post_id=false){
  */
 
 function xspfpl_get_health($post_id){
+    
+    //no health for static playlists
+    if (XSPFPL_Single_Playlist::get_option('is_static', $post_id)) return false;
+    if ( get_post_status($post_id) != 'publish') return false;
 
     $metas = get_post_meta($post_id, XSPFPL_Single_Playlist::$meta_key_health, true);
 
@@ -66,23 +72,83 @@ function xspfpl_get_tracks_cache($post_id){
     return get_post_meta($post_id, XSPFPL_Single_Playlist::$meta_key_tracks_cache, true);
 }
 
-function xspfpl_get_last_track($post_id = false){
-    
-    $output = null;
-    
-    if (!$post_id) $post_id = get_the_ID();
-    
-    $cache = xspfpl_get_tracks_cache($post_id);
+/*
+ * Display tracks in a table
+ */
 
-    if (isset($cache['tracks'])){
-        $last_track = end($cache['tracks']);
-        if (isset($last_track['title']) && isset($last_track['artist'])){
-            $output = sprintf(__('<span class="track-title">%1$s</span> by <span class="track-artist">%2$s</span>','xspfpl'),$last_track['title'],$last_track['artist']);
-        }
+function xspfpl_tracks_table($tracks = false, $max_tracks = false, $hide_header = false){
+    echo xspfpl_get_tracks_table($tracks, $max_tracks, $hide_header);
+}
+
+function xspfpl_get_tracks_table($tracks = false, $max_tracks = false, $hide_header = false){
+    
+    $header_style='';
+    $track_number_style='';
+    $tabletracks = '';
+    $count=0;
+    
+    if (empty($tracks)) return;
+    
+    if (is_int($max_tracks)){
+        $tracks = array_slice($tracks,-$max_tracks,$max_tracks);
+    }
+
+    //header
+    if ($hide_header) $header_style=' style="display:none;"';
+    
+    //one single track
+    if (count($tracks) == 1){
+        $track_number_style=' style="display:none;"';
     }
     
-    return apply_filters('xspfpl_get_last_track',$output,$post_id);
+    //tracks
+    foreach ((array)$tracks as $track){
+        $count++;
+        $artist = '';   if (isset($track['artist']))    $artist = $track['artist'];
+        $title = '';    if (isset($track['title']))     $title = $track['title'];
+        $album = '';   if (isset($track['album']))     $album = $track['album'];
+        
+        $tabletracks.= sprintf('<tr class="tracks-table-row"><td class="track-number"%1$s>%2$s</td><td class="track-artist">%3$s</td><td class="track-title">%4$s</td><td class="track-album">%5$s</td></tr>',
+                $track_number_style,
+                $count,
+                $artist,
+                $title,
+                $album
+            );
+    }
+    
+    $table = sprintf('<table class="tracks-table"><tr class="tracks-table-header"%1$s><th class="track-number"%2$s></td><th class="track-artist">'.__('Artist','xspfpl').'</th><th class="track-title">'.__('Title','xspfpl').'</th><th class="track-album">'.__('Album','xspfpl').'</th></tr>%3$s</table>',
+        $header_style,
+        $track_number_style,
+        $tabletracks
+    );
+    
+    return $table;
+}
 
+/**
+ * Returns a table containing the X last tracks
+ * @param type $post_id
+ * @param type $max_tracks
+ * @param type $hide_header
+ * @return string
+ */
+
+function xspfpl_get_last_cached_tracks($post_id = false, $max_tracks = false, $hide_header = false){
+    
+    $output = null;
+    if (!$post_id) $post_id = get_the_ID();
+    $cache = xspfpl_get_tracks_cache($post_id);
+    
+    if (!isset($cache['tracks'])) return;
+    $tracks = $cache['tracks'];
+    
+    return xspfpl_get_tracks_table($tracks, $max_tracks, $hide_header);
+
+}
+
+function xspfpl_get_last_cached_track($post_id = false){
+    return xspfpl_get_last_cached_tracks($post_id,1, true);
 }
 
 /*
@@ -91,136 +157,8 @@ function xspfpl_get_last_track($post_id = false){
 
 function xspfpl_get_xspf_request_count($post_id = false){
     if (!$post_id) $post_id = get_the_ID();
+    if ( get_post_status($post_id) != 'publish') return false;
     return (int)get_post_meta($post_id, XSPFPL_Single_Playlist::$meta_key_requests, true);
-}
-
-
-
-/**
- * Get the Toma.hk ID of the playlist from the post metas.
- * If the post meta do not exists, find the playlist ID and save it.
- * @global type $post
- * @param type $post_id
- * @return type 
- */
-
-function xspfpl_get_tomahk_playlist_id($post_id=false,$force=false){
-
-    if(!$post_id){
-        $post_id = get_the_ID();
-    }
-
-    $playlist_id = get_post_meta($post_id,'toma_hk_id', true);
-
-    if ((!$playlist_id)||($force)){ //send XSPF to toma.hk and get playlist ID back
-        
-        //$playlist = new XSPFPL_Single_Playlist($post_id);
-        //$tracks = $playlist->populate_tracks();
-        //if(!$tracks) return false;
-        
-
-        $link = xspfpl_get_xspf_permalink($post_id);
-
-        $tomahk_import_link = 'http://toma.hk/importPlaylistXSPF.php';
-        $tomahk_import_args =array(
-            'xspf'=>urlencode($link),
-            //'title'=>get_the_title()
-        );
-
-        $tomahk_import_link = add_query_arg($tomahk_import_args,$tomahk_import_link);
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $tomahk_import_link);
-        curl_setopt($curl, CURLOPT_COOKIESESSION, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-        $return = curl_exec($curl);
-        $info = curl_getinfo($curl); //Some information on the fetch
-        curl_close($curl);
-
-        $redirect_url = $info['redirect_url'];
-
-        if ($redirect_url){
-            $redirect_split = explode('http://toma.hk/p/',$redirect_url);
-            $playlist_id = $redirect_split[1];
-
-            if($playlist_id){ //save it
-                update_post_meta($post_id,'toma_hk_id', $playlist_id);
-            }
-
-        }
-
-
-    }
-
-    return apply_filters('xspfpl_get_tomahk_playlist_id',$playlist_id,$post_id);
-
-
-}
-
-/**
- * Get the Toma.hk playlist link for a post.
- * @param type $post_id
- * @return type 
- */
-
-function xspfpl_get_tomahk_playlist_link($post_id=false){
-
-    $playlist_id = xspfpl_get_tomahk_playlist_id($post_id);
-    if (!$playlist_id) return false;
-    
-    $playlist_url = 'http://toma.hk/p/'.$playlist_id;
-
-    return apply_filters('xspfpl_get_tomahk_playlist_link',$playlist_url,$playlist_id,$post_id);
-
-}
-
-/**
- * Get the playlist saved on Toma.hk for a post.
- * @param type $post_id
- * @return boolean 
- */
-
-function xspfpl_get_tomahk_playlist($post_id=false){
-    
-    if (!xspfpl_is_local_wp()){ //not local
-        $tomahk_id = xspfpl_get_tomahk_playlist_id($post_id);
-    }else{ //for testing
-        //$tomahk_id = 'adi2222M';
-    }
-
-    $tomahk_iframe_args = array(
-        'width'=>550,
-        'height'=>430
-    );
-    $tomahk_iframe_args = apply_filters('tomahk_plp_iframe_args',$tomahk_iframe_args);
-
-
-
-    if (!xspfpl_is_local_wp()&&(!$tomahk_id)) return false;
-
-    $url = 'http://toma.hk/p/'.$tomahk_id;
-    $url_args['embed'] = 'true';
-    $url = add_query_arg($url_args,$url);
-
-    ob_start();
-    ?>
-    <iframe src="<?php echo $url;?>" width="<?php echo $tomahk_iframe_args['width'];?>" height="<?php echo $tomahk_iframe_args['height'];?>" scrolling="no" frameborder="0" allowtransparency="true" ></iframe>
-    <?php
-    $content = ob_get_contents();
-    
-    if (xspfpl_is_local_wp()){ //local
-        //we will not be able to send XSPF playlist to tomahawk if its url is local; abord
-        $content.= '<p>('.__('Toma.hk embeds do not work on local Wordpress installations','thk-pl').')</p>';
-    }
-    
-    ob_end_clean();
-    return apply_filters('xspfpl_get_tomahk_playlist',$content,$tomahk_id,$post_id);
-}
-
-function xspfpl_is_local_wp(){
-    if ($_SERVER['REMOTE_ADDR']=='127.0.0.1') return true;
-    return false;
 }
 
 function xspf_classes($array){
@@ -232,7 +170,27 @@ function xspf_get_classes($classes){
     return' class="'.implode(' ',$classes).'"';
 }
 
+function xspf_get_hatchet_id($post_id = false){
+    if (!$post_id) $post_id = get_the_ID();
+    $id = get_post_meta( $post_id,XSPFPL_Hatchet::$meta_key_hatchet_id,true );
+    return hatchet_sanitize_id($id);
+}
 
+function xspfpl_get_widget_playlist($post_id = false){
 
+    if (!class_exists('Hatchet')) return false; // Hatchet plugin needed
+
+    if (!$post_id) $post_id = get_the_ID();
+    
+    if ($hatchet_id = xspf_get_hatchet_id()){
+            $widget_options = array(
+                'hatchet_id'=> $hatchet_id
+            );
+
+            $widget = new Hatchet_Widget_Playlist($widget_options);
+            return $widget->get_html();
+    }
+
+}
 
 ?>

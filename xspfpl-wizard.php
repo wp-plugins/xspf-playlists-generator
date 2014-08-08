@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Wizard class.  Used to build a playlist.  Actually only in the backend, will maybe be extended to the frontend someday.
+ */
+
 class XSPFPL_Playlist_Wizard {
     
     var $playlist;
@@ -17,7 +21,7 @@ class XSPFPL_Playlist_Wizard {
             wp_parse_args(array(
                 'title'         => __('Playlist URL','xspfpl'),
                 'desc'          => __('Enter the URL of the page where the tracklist is displayed.','xspfpl'),
-                'error_codes'   => array('tracklist_url','tracklist_page_empty')
+                'error_codes'   => array('tracklist_url','tracklist_page_empty'),
             ),$step_default),
             
             wp_parse_args(array(
@@ -29,14 +33,13 @@ class XSPFPL_Playlist_Wizard {
             wp_parse_args(array(
                 'title'  => __('Track Infos','xspfpl'),
                 'desc'          => sprintf('%s<br/>%s',
-                                    __('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selectors</a> to extract the artist (eg. <code>h4 .artist strong</code>) and title (eg. <code>span</code>) for each track.','xspfpl'),
-                                    __('You can eventually use <a href="http://regex101.com/" target="_blank">regular expressions</a> to refine your matches.','xspfpl'))
+                                    __('Enter a <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selectors</a> to extract the artist, title, album (optional) and image (optional) for each track.','xspfpl'),
+                                    __('Advanced users can eventually use <a href="http://regex101.com/" target="_blank">regular expressions</a> to refine your matches, using the links <strong>[...^]</strong>.','xspfpl'))
                                     
             ),$step_default),
             
             wp_parse_args(array(
                 'title'  => __('Playlist Options','xspfpl'),
-                'feedback_box'  => false,
                 'required'      => false
             ),$step_default)
         );
@@ -54,17 +57,17 @@ class XSPFPL_Playlist_Wizard {
             'title'          =>'',
             'desc'          => '',
             'error_codes'   => array(),
-            'feedback_box'  => true,
             'required'      => true
         );
         return $step;
     }
     
     
-    function wizard(){
-
+    function wizard_metabox(){
+        $wizard_classes=array();
+        if ($this->playlist->get_option('is_static')) $wizard_classes[] = 'static';
         ?>
-        <div id="xspfpl-wizard">
+        <div id="xspfpl-wizard"<?php xspf_classes($wizard_classes);?>>
             <!--
             <ul>
                 <li><a href="#xspf-wizard-step-1" class="nav-tab nav-tab-active"><?php _e('Tracklist URL','xspfpl');?></a></li>
@@ -110,11 +113,6 @@ class XSPFPL_Playlist_Wizard {
         ?>
         <div id="xspf-wizard-step-<?php echo $step;?>"<?php xspf_classes($step_classes);?>>
             <div class="xspf-wizard-step-header">
-<?php 
-                //feedback box link
-                if ($this->steps[$step_key]['feedback_box']){?>
-                	<span class="feedback-link"><a href="#"><?php _e('Show feedback','xspfpl');?></a></span>
-            	<?php }?>
                 <h3 class="xspf-wizard-step-title"><?php echo $this->steps[$step_key]['title'];?></h3>
                 <p class="xspf-wizard-step-desc"><?php echo $this->steps[$step_key]['desc'];?></p>
                 
@@ -125,82 +123,81 @@ class XSPFPL_Playlist_Wizard {
             switch ($step_key){
                 case 0:
                     ?>
-                    <input name="<?php $this->field_name('tracklist_url');?>" type="text" value="<?php echo $this->playlist->tracklist_url;?>"/>
+                    <input id="<?php $this->field_name('tracklist_url');?>" name="<?php $this->field_name('tracklist_url');?>" type="text" value="<?php echo $this->playlist->get_option('tracklist_url');?>"/>
                     <?php
                 break;
                 case 1:
                     ?>
-                    <input name="<?php $this->field_name('tracks_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->tracks_selector;?>"/>
+                    
+                    <input id="<?php $this->field_name('tracks_selector');?>" name="<?php $this->field_name('tracks_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->get_option('tracks_selector');?>"/>
                     <?php
+                    $this->wizard_feedback($step_key);
                 break;
                 case 2:
                     ?>
+                    
                     <!-- track artist-->
                     <div class="track-info">
-                        <label for="<?php $this->field_name('track_artist_selector');?>"><?php _e('Artist Selector','xspfpl');?> *</label>
-                        <input name="<?php $this->field_name('track_artist_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->track_artist_selector;?>"/>
-                        <a href="#" class="regex-link"><?php _e('Regex','xspfpl');?></a>
+                        <label for="<?php $this->field_name('track_artist_selector');?>"><?php _e('Artist Selector','xspfpl');?> * <a href="#" title="<?php _e('Use Regular Expression','xspfpl');?>" class="regex-link">[...^]</a></label>
+                        <input id="<?php $this->field_name('track_artist_selector');?>" name="<?php $this->field_name('track_artist_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->get_option('track_artist_selector');?>"/>
+                        <?php _e('eg. <code>h4 .artist strong</code>');?>
                         <?php self::wizard_regex_block('track_artist_regex');?>
                     </div>
                     <!-- track title-->
                     <div class="track-info">
-                        <label for="<?php $this->field_name('track_title_selector');?>"><?php _e('Title Selector','xspfpl');?> *</label>
-                        <input name="<?php $this->field_name('track_title_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->track_title_selector;?>"/>
-                        <a href="#" class="regex-link"><?php _e('Regex','xspfpl');?></a>
+                        <label for="<?php $this->field_name('track_title_selector');?>"><?php _e('Title Selector','xspfpl');?> * <a href="#" title="<?php _e('Use Regular Expression','xspfpl');?>" class="regex-link">[...^]</a></label>
+                        <input id="<?php $this->field_name('track_title_selector');?>" name="<?php $this->field_name('track_title_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->get_option('track_title_selector');?>"/>
+                        <?php _e('eg. <code>span.track</code>');?>
                         <?php self::wizard_regex_block('track_title_regex');?>
                     </div>
                     <!-- track album-->
                     <div class="track-info">
-                        <label for="<?php $this->field_name('track_album_selector');?>"><?php _e('Album Selector','xspfpl');?></label>
-                        <input name="<?php $this->field_name('track_album_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->track_album_selector;?>"/>
-                        <a href="#" class="regex-link"><?php _e('Regex','xspfpl');?></a>
+                        <label for="<?php $this->field_name('track_album_selector');?>"><?php _e('Album Selector','xspfpl');?> <a href="#" title="<?php _e('Use Regular Expression','xspfpl');?>" class="regex-link">[...^]</a></label>
+                        <input id="<?php $this->field_name('track_album_selector');?>" name="<?php $this->field_name('track_album_selector');?>" class="selector code" type="text" value="<?php echo $this->playlist->get_option('track_album_selector');?>"/>
+                        <?php _e('eg. <code>span.album</code>');?>
                         <?php self::wizard_regex_block('track_album_regex');?>
                     </div>
 
                     <!-- track image-->
                     <div class="track-info">
                         <label for="<?php $this->field_name('track_album_art_selector');?>"><?php _e('Image Selector','xspfpl');?></label>
-                        <input name="<?php $this->field_name('track_album_art_selector');?>" class="code selector" type="text" value="<?php echo $this->playlist->track_album_art_selector;?>"/>
+                        <input name="<?php $this->field_name('track_album_art_selector');?>" class="code selector" type="text" value="<?php echo $this->playlist->get_option('track_album_art_selector');?>"/>
+                        <?php _e('eg. <code>.album-art img</code>');?>
                     </div>
                     <?php
+                    $this->wizard_feedback($step_key);
                 break;
                 case 3:
                     ?>
                     <!-- MusicBrainz -->
                     <div>
-                        <input name="<?php $this->field_name('musicbrainz');?>" type="checkbox"<?php checked((bool)$this->playlist->musicbrainz);?> value="1"/>
+                        <?php
+                        $checked_musicbrainz = (bool)$this->playlist->get_option('musicbrainz');
+                        ?>
+                        <input id="<?php $this->field_name('musicbrainz');?>" name="<?php $this->field_name('musicbrainz');?>" type="checkbox"<?php checked($checked_musicbrainz);?> value="on"/>
                         <label style="display:inline" for="<?php $this->field_name('musicbrainz');?>"><?php _e('Compare tracks informations with <a href="http://musicbrainz.org/" target="_blank">MusicBrainz</a>','xspfpl');?></label>
                         <p class="xspfpl-info">
                             <?php _e('Sometimes, the metadatas (title,artist,...) of the tracks are not corrects.  Enabling this will make MusicBrainz try to correct wrong values.','xspfpl');?><br/>
-                            <?php _e('This makes the playlist render slower : each track takes about ~1 second to be checked with MusicBrainz.','xspfpl');?>
+                            <?php _e('This makes the playlist render slower : each track takes about ~1 second to be checked with MusicBrainz.','xspfpl');?><br/>
+                            <?php _e('(Ignored in the wizard, for non-freezed playlists)','xspfpl');?>
                         </p>
                     </div>
-
-                    <!-- XSPF link embed -->
+                    <!-- Is static -->
                     <div>
-                        <input name="<?php $this->field_name('xspf_link');?>" type="checkbox"<?php checked((bool)$this->playlist->xspf_link);?> value="1"/>
-                        <label style="display:inline" for="<?php $this->field_name('xspf_link');?>"><?php _e('XSPF link','xspfpl');?></label>
+                        <?php
+                        $checked_static = (bool)$this->playlist->get_option('is_static');
+                        ?>
+                        <input id="<?php $this->field_name('is_static');?>" name="<?php $this->field_name('is_static');?>" type="checkbox"<?php checked($checked_static);?> value="on"/>
+                        <label style="display:inline" for="<?php $this->field_name('is_static');?>"><?php _e('Freeze this playlist','xspfpl');?></label>
                         <p class="xspfpl-info">
-                            <?php _e('Adds automatically an XPSF link to your post content.','xspfpl');?><br/>
-                            <?php printf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_get_xspf_permalink()</code>');?><br/>
-                        </p>
-                    </div>
-
-                    <!-- Toma.hk embed -->
-                    <div>
-                        <input name="<?php $this->field_name('tomahk_embed');?>" type="checkbox"<?php checked((bool)$this->playlist->tomahk_embed);?> value="1"/>
-                        <label style="display:inline" for="<?php $this->field_name('tomahk_embed');?>"><?php _e('Embed playlist from <a href="http://toma.hk/tools/embeds.php" target="_blank">Toma.hk</a>','xspfpl');?></label>
-                        <p class="xspfpl-info">
-                            <?php _e('Displays the playlist generated from the toma.hk website, under your post.','xspfpl');?><br/>
-                            <?php _e('ATTENTION : Toma.hk playlists do not update automatically yet, but this will be improved.','xspfpl');?><br/>
+                            <?php _e('If the playlist you parse is static — not like a radio station playlist —, you could freeze your playlist once your settings are correct (check the XSPF file first).','xspfpl');?><br/>
+                            <?php _e('This will save the whole tracklist locally and avoid parsing the remote web page each time it is called.','xspfpl');?><br/>
+                            <?php _e('Safer and faster !','xspfpl');?>
                         </p>
                     </div>
                     <?php
                 break;
             }
-            
-            //feedback box
-            $this->wizard_feedback($step_key);
             
             ?>
         </div><!-- end of .xspf-wizard-step-->
@@ -228,7 +225,7 @@ class XSPFPL_Playlist_Wizard {
         ?>
         <div class="regex-wrapper">
             <label for="<?php $this->field_name($field_name);?>"><?php _e('Regex Filter','xspfpl');?></label>
-            <span class="code"><input class="regex" id="<?php $this->field_name($field_name);?>" name="<?php $this->field_name($field_name);?>" type="text" value="<?php echo esc_html($this->playlist->$field_name);?>"/></span>
+            <span class="code"><input class="regex" id="<?php $this->field_name($field_name);?>" name="<?php $this->field_name($field_name);?>" type="text" value="<?php echo esc_html($this->playlist->get_option($field_name));?>"/></span>
         </div>
         <?php
     }
@@ -259,17 +256,17 @@ class XSPFPL_Playlist_Wizard {
     
     function wizard_feedback($step_key){
         $feedback = '';
-        
-        if (!$this->steps[$step_key]['feedback_box']) return $feedback;
-        
+
         switch ($step_key){
-            case 0:
+            case 1: //Tracks Selector
+                
                 if ($this->playlist->body_el){
                     $body_html = htmlspecialchars($this->playlist->body_el->htmlOuter());
                     $feedback = '<pre><code class="output code html">'.$body_html.'</code></pre>';
+                    
                 }
             break;
-            case 1:
+            case 2: //Track Infos
                 $tracklist_items = $this->playlist->get_tracklist();
                 
                 if (!$tracklist_items) break;
@@ -281,24 +278,11 @@ class XSPFPL_Playlist_Wizard {
                 }
                 $feedback .= '</div>';
             break;
-            case 2:
-                if (empty($this->playlist->tracks)) break;
-                $feedback = '<ol>';
-                foreach($this->playlist->tracks as $track) {
-                    $feedback .='<li class="output code"><ul>';
-                    $feedback .='<li><strong>'.__('Artist','xspfpl').':</strong> '.$track['artist'].'</li>';
-                    $feedback .='<li><strong>'.__('Title','xspfpl').':</strong> '.$track['title'].'</li>';
-                    $feedback .='<li><strong>'.__('Album','xspfpl').':</strong> '.$track['album'].'</li>';
-                    $feedback .='<li><strong>'.__('Image','xspfpl').':</strong> '.$track['image'].'</li>';
-                    $feedback .='</ul></li>';
-                }
-                $feedback .= '</ol>';
-            break;
         }
         
         if (!$feedback) return false;
-        
-        echo '<div class="feedback-wrapper"><div class="feedback-content">'.$feedback.'</div></div>';
+
+        echo '<div class="feedback-wrapper"><span class="feedback-link"><a href="#">'.__('Show input','xspfpl').'</a></span><div class="feedback-content">'.$feedback.'</div></div>';
         
     }
     
@@ -308,22 +292,18 @@ class XSPFPL_Playlist_Wizard {
     static function wizard_save($post_id){
         
             $args = array();
-            $default_args = XSPFPL_Single_Playlist::get_default_args();
+            $default_args = XSPFPL_Single_Playlist::get_default_options();
             
-            foreach ( (array)$default_args as $slug => $default ){
-                $args[$slug] = self::get_field_value($slug);
-            }
-       
-            $args = apply_filters('xspfpl_save_args',$args,$post_id);
+            $data = self::get_wizard_data();
 
             //remove default values
-            foreach ( $args as $slug => $value ){
-                if ( $value==$default_args[$slug] ) unset($args[$slug]);
+            foreach ( $data as $slug => $value ){
+                if ( $value==$default_args[$slug] ) unset($data[$slug]);
             }
 
-            update_post_meta( $post_id, XSPFPL_Single_Playlist::$meta_key_settings, $args );
+            update_post_meta( $post_id, XSPFPL_Single_Playlist::$meta_key_settings, $data );
 
-            do_action('xspfpl_save', $args, $post_id);
+            do_action('xspfpl_save', $data, $post_id);
 
     }
     
@@ -334,24 +314,46 @@ class XSPFPL_Playlist_Wizard {
     static function get_field_name($slug){
         return 'xspfpl['.$slug.']';
     }
-    static function get_field_value($slug){
+
+    static function get_wizard_data(){
+        if (!isset($_POST['xspfpl'])) return false;
+        return self::sanitize_data($_POST['xspfpl']);
+    }
+    
+    /*
+     * Sanitize wizard data
+     */
+    
+    static function sanitize_data($input){
         
-        $bools = array('musicbrainz','tomahk_embed','xspf_link');
+        $new_input = array();
         
-        if (!isset($_POST['xspfpl'][$slug])) return false;
-        $value = $_POST['xspfpl'][$slug];
+        //tracklist url
+        if (isset($input['tracklist_url'])) $new_input['tracklist_url'] = $input['tracklist_url'];
         
+        //selectors
+        if (isset($input['tracks_selector'])) $new_input['tracks_selector'] = $input['tracks_selector'];
+        if (isset($input['track_artist_selector'])) $new_input['track_artist_selector'] = $input['track_artist_selector'];
+        if (isset($input['track_title_selector'])) $new_input['track_title_selector'] = $input['track_title_selector'];
+        if (isset($input['track_album_selector'])) $new_input['track_album_selector'] = $input['track_album_selector'];
+        if (isset($input['track_album_art_selector'])) $new_input['track_album_art_selector'] = $input['track_album_art_selector'];
+
         //regex
-        if ( ($slug=='track_artist_regex') || ($slug=='track_title_regex') || ($slug=='track_album_regex') ){
-            $value = addslashes($value);
-        }
+        if (isset($input['track_artist_regex'])) $new_input['track_artist_regex'] = addslashes($input['track_artist_regex']);
+        if (isset($input['track_title_regex'])) $new_input['track_title_regex'] = addslashes($input['track_title_regex']);
+        if (isset($input['track_album_regex'])) $new_input['track_album_regex'] = addslashes($input['track_album_regex']);
+
+        //musicbrainz
+        if (isset($input['musicbrainz'])) $new_input['musicbrainz'] = $input['musicbrainz'];
         
-        //bools
-        if ( in_array($slug,$bools) ){
-            $value = (bool)$value;
-        }
+        //static
+        if (isset($input['is_static'])) $new_input['is_static'] = $input['is_static'];
         
-        return $value;
+        return $new_input;
+    }
+    
+    function found_tracks_metabox(){
+        xspfpl_tracks_table($this->playlist->tracks);
     }
     
 }

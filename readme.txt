@@ -1,29 +1,34 @@
 === XSPF Playlists Generator ===
 Contributors:grosbouff
 Donate link:http://bit.ly/gbreant
-Tags: Tomahawk, toma.hk, xspf, playlists, parser, music, Spotify, Grooveshark, Soundcloud, Ex.fm
+Tags: Tomahawk, Hatchet, hatchet.is, xspf, playlists, parser, music, Spotify, Grooveshark, Soundcloud, Ex.fm, Subsonic
 Requires at least: 3.5
 Tested up to: 4
 Stable tag: trunk
 License: GPLv2 or later
 
-Parse tracklists from websites and generate a dynamic XSPF file out of it; and embed it as a Toma.hk playlist in your post.
+Parse tracklists from websites and generate a dynamic XSPF file out of it !
 
 == Description ==
 
-This plugin allows you to parse any tracklist found on internet and generate a dynamic [XSPF](http://en.wikipedia.org/wiki/XSPF/) file out of it; and a [Toma.hk](http://toma.hk/) playlist URL.
-The idea behind this plugin is that you can parse tracklists from radio stations websites (for example) and listen to them directly on your website (with a Toma.hk playlist embed) or within [Tomahawk](http://www.tomahawk-player.org/) (with the XSPF link).
+This plugin allows you to parse any tracklist found on internet and generate a dynamic [XSPF](http://en.wikipedia.org/wiki/XSPF/) file out of it.
+
+The idea behind this plugin is that you can parse tracklists from radio stations websites (for example, but it could also be static playlists) and listen to them directly on your website (with a Hatchet.is playlist embed) or within [Tomahawk](http://www.tomahawk-player.org/) (with the XSPF link).
 So you are able to listen to the tracks provided by those stations, without the ads and the chat !
+
+This plugin has been developped for the website [XSPF Radios HQ](http://radios.pencil2d.org/).
+If you just want quickly create a dynamic XSPF file, maybe you don't need to install the plugin : 
+head towards XSPF Radios HQ and [create directly your playlist](http://radios.pencil2d.org/wordpress/wp-admin/post-new.php?post_type=playlist) there !
 
 = Create a new playlist =
 
 In the Wordpress backend, you can create/manage playlists in the "Playlist Parsers" section of the left menu.
-It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Wizard) under the editor :
+It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Playlist Parser Wizard) under the editor :
 Fill the informations required (tracklist URL, tracks selector, ...) then save your post.
 
-You can check 'XSPF link' to add the playlist link before the post content, and you can directly embed the playlist (from toma.hk) by checking 'Embed playlist'.
+You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower).
+Other options are available under Playlist Parsers > Options
 
-You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower), or embed a toma.hk playlist directly in your post.
  
 = Demo =
 See it in action [here](http://radios.pencil2d.org/playlist).
@@ -58,18 +63,27 @@ Upload the plugin to your blog and Activate it.
 
 See function xspfpl_get_xspf_permalink() in xspfpl-templates.php.
 
-= How can I display a Toma.hk playlist in my templates ? =
+= How can I display a Hatchet.is playlist in my templates ? =
 
-See function xspfpl_get_tomahk_playlist() in xspfpl-templates.php.
-You could also be interested by the functions xspfpl_get_tomahk_playlist_link() and xspfpl_get_tomahk_playlist_id() of the same file.
-
-This last function is also responsible for the submission of the XSPF file to Toma.hk : it sends the XSPF file to Toma.hk, returns the Toma.hk playlist ID, and stores it as a post meta.
-So the XSPF is only sent the first time; next time the value from the post meta is retrieved.
+First, you have to install and activate the [Hatchet](https://wordpress.org/plugins/wp-hatchet/) plugin.
+Then, you can enable embedding playlists widget in Playlist Parsers > Options, or you can call the function xspfpl_get_widget_playlist() in xspfpl-templates.php.
 
 == Screenshots ==
-1. Metabox shown under the editor, used to parse a web playlist
+1. List of playlists (backend)
+2. Playlist Parser Wizard Metabox (backend)
+3. Options page (backend)
 
 == Changelog ==
+= 0.3.0 =
+* + lots of bugs fixes and improvements
+* static playlists (do not re-parse the URL each time) option.
+* custom taxonomy playlist_tag (replacing post_tag) - migration is automatical.
+* custom capabilities
+* less options in wizard (simplier)
+* sanitize playlist options when saved
+* new : options page
+* updated toma.hk stuff to hatchet.is
+* new : function xspfpl_get_last_cached_tracks() / updated function xspfpl_get_last_cached_track()
 = 0.2.1 =
 * fixed bug in post_column_register()
 = 0.2.0 =
@@ -84,7 +98,7 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 * improved get_tracks()
 * splitted files
 = 0.1.7 =
-* renamed post type from 'xspfpl' to 'playlist'.  See http://stackoverflow.com/a/14918890/782013 to update your database if needed.
+* renamed post type from 'xspf-plgen' to 'playlist'.  See http://stackoverflow.com/a/14918890/782013 to update your database if needed.
 = 0.1.6 =
 * replaced get_doc_content() by native wp_remote_get()
 * regex stuff improvement
@@ -103,6 +117,11 @@ So the XSPF is only sent the first time; next time the value from the post meta 
 * Improved the way we catch tracklists (with curl); so no more need to set time arguments in the url / set timezone / make regexes
 = 0.1 =
 * First release
+
+= To Do =
+
+* Publish playlists on Hatchet (//Hatchet.is API : https://api.hatchet.is/apidocs/#!/playlists)
+* Send posts to Radios HQ using XML-RPC (http://www.skyverge.com/blog/extending-the-wordpress-xml-rpc-api/)
 
 == Upgrade Notice ==
 

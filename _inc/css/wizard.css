@@ -1,3 +1,5 @@
+@import url(tracks-table.css);
+
 #xspfpl-wizard input[type=text]{
     width:100%;
 }
@@ -12,11 +14,17 @@
     width:50%;
 }
 
+#xspfpl-wizard .regex-link{
+    text-decoration:none;
+}
 
 #xspfpl-wizard .regex-wrapper{
     color:#999;
     display:none;
     padding:5px;
+}
+#xspfpl-wizard .regex-wrapper.has-regex{
+    display:inherit;
 }
 
 #xspfpl-wizard .regex-wrapper .code:before{
@@ -42,6 +50,7 @@
 .xspf-wizard-step{
     padding:10px;
     padding-bottom:20px;
+    position:relative;
 }
 .xspf-wizard-step.has-errors{
     border-left:4px solid #dd3d36;
@@ -63,8 +72,10 @@
 }
 
 #xspfpl-wizard .feedback-link{
-    float:right;
-    display:none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    //display:none;
 }
 #xspfpl-wizard .xspf-wizard-step-title{
     clear:left;
@@ -97,9 +108,13 @@
     padding-left:0;
 }
 
-#xspfpl-wizard pre {
+#xspfpl-wizard .feedback-content > * {
     height:200px;
     overflow-y: scroll;
+}
+
+#xspfpl-wizard pre {
     background:#f9f9f9;
 }
+
 

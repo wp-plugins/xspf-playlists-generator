@@ -1,27 +1,18 @@
 <?php
 
+/**
+ * Single playlist class.  The most important one !
+ */
+
 class XSPFPL_Single_Playlist {
+
     var $post_id;
     var $playlist_title;
     var $playlist_author;
-    var $tracklist_url;
-    var $tracks_selector;
-    var $track_artist_selector;
-    var $track_artist_regex;
-    var $track_title_selector;
-    var $track_title_regex;
-    var $track_album_selector;
-    var $track_album_regex;
-    var $track_album_art_selector;
-    var $track_comment_selector;
-    var $max_tracks;
-    var $musicbrainz;
-    var $tomahk_embed;
-    var $xspf_link;
     var $playlist_info;
 
     var $tracks = array(); //tracks found
-    
+
     var $errors;
     var $body_el;
     var $is_wizard = false; //special behaviour when wizard is enabled
@@ -37,19 +28,9 @@ class XSPFPL_Single_Playlist {
 
         if ( (isset($args))&&(is_numeric($args)) ){ //is a post ID
             $this->post_id = $args;
-            $args = self::get_post_metas($this->post_id);
+            $args = self::get_options($this->post_id);
            
         }
-        
-        $default = self::get_default_args();
-        $args = wp_parse_args($args,$default);
-
-        //regexes
-        $args['track_artist_regex'] = stripslashes($args['track_artist_regex']);
-        $args['track_title_regex'] = stripslashes($args['track_title_regex']);
-        $args['track_album_regex'] = stripslashes($args['track_album_regex']);
-
-        $args = apply_filters('xspfpl_parser_args',$args);
 
         foreach ($args as $slug=>$arg){
             $this->$slug = trim($arg);
@@ -57,7 +38,7 @@ class XSPFPL_Single_Playlist {
 
     }
     
-    static function get_default_args(){
+    static function get_default_options(){
         $default = array(
             'tracklist_url'             => null, //url to parse
             'tracks_selector'           => null,
@@ -69,33 +50,48 @@ class XSPFPL_Single_Playlist {
             'track_album_regex'         => null,
             'track_album_art_selector'  => null,
             'track_comment_selector'    => null,
-            'max_tracks'                => 15,   //max titles
+            'is_static'                => false, //wheter or not playlist should be only parsed one time
+            'max_tracks'                => 15,   //max titles (if playlist is not static)
             'musicbrainz'               => false,   //check tracks with musicbrainz
-            'tomahk_embed'              => true,
-            'xspf_link'                 => true,
         );
         return $default;
     }
     
-    function get_post_metas($post_id){
+    static function get_options($post_id = false){
+        
+        if (!$post_id) $post_id = get_the_ID();
+        if( get_post_type($post_id)!=xspfpl()->post_type ) return false;
         
         $post = get_post($post_id);
         
-        $default = self::get_default_args();
-        $metas = get_post_meta($post_id, self::$meta_key_settings, true);
-
-        $post_args = wp_parse_args($metas,$default);
+        $default = XSPFPL_Single_Playlist::get_default_options();
+        $metas = get_post_meta($post_id, XSPFPL_Single_Playlist::$meta_key_settings, true);
 
         //pl title
-        $post_args['playlist_title'] = get_the_title($post_id);
+        $metas['playlist_title'] = get_the_title($post_id);
         //pl author
-        $post_args['playlist_author'] = get_the_author_meta('user_nicename', $post->post_author );
+        $metas['playlist_author'] = get_the_author_meta('user_nicename', $post->post_author );
         //pl info
-        $post_args['playlist_info'] = get_permalink($post_id);
+        $metas['playlist_info'] = get_permalink($post_id);
+
+        $options = wp_parse_args($metas,$default);
         
+        //regexes
+        $options['track_artist_regex'] = stripslashes($options['track_artist_regex']);
+        $options['track_title_regex'] = stripslashes($options['track_title_regex']);
+        $options['track_album_regex'] = stripslashes($options['track_album_regex']);
+
+        return apply_filters('xspfpl_get_playlist_options',$options,$post_id);
         
-        
-        return $post_args;
+    }
+    
+    static function get_option($name, $post_id = false){
+
+        $options = self::get_options($post_id);
+        if (isset($options[$name])){
+            return $options[$name];
+        }
+        return false;
     }
     
     /**
@@ -106,14 +102,14 @@ class XSPFPL_Single_Playlist {
     function get_body_el(){
         //URL 
         
-        if (!$this->tracklist_url){
+        if (!$this->get_option('tracklist_url')){
             $this->errors->add( 'tracklist_url_empty', __('The tracklist URL is empty.','xspfpl') );
             return false;
         }
         
         
         //check is correct url
-        if (!filter_var($this->tracklist_url, FILTER_VALIDATE_URL)){
+        if (!filter_var($this->get_option('tracklist_url'), FILTER_VALIDATE_URL)){
             $this->errors->add( 'tracklist_url', __('The tracklist URL is invalid.','xspfpl') );
             return false;
         }
@@ -121,8 +117,8 @@ class XSPFPL_Single_Playlist {
         //get page
         
         //allows us to filter the parameters depending on the URL
-        $remote_args = apply_filters('xspfpl_get_page_args',array(),$this->tracklist_url);
-        $response = wp_remote_get( $this->tracklist_url, $remote_args );
+        $remote_args = apply_filters('xspfpl_get_page_args',array(),$this->get_option('tracklist_url'));
+        $response = wp_remote_get( $this->get_option('tracklist_url'), $remote_args );
         
         if (is_wp_error($response)){
             $this->errors->add( 'tracklist_page_empty', __('There was an error fetching the content from this URL.','xspfpl') );
@@ -156,12 +152,12 @@ class XSPFPL_Single_Playlist {
 
         phpQuery::selectDocument($this->body_el);
         
-        if (!$this->tracks_selector){
+        if (!$this->get_option('tracks_selector')){
             $this->errors->add( 'tracks_selector_empty', __('The tracks selector is empty','xspfpl') );
             return false;
         }
 
-        $tracklist_el = pq($this->tracks_selector);
+        $tracklist_el = pq($this->get_option('tracks_selector'));
 
         //check tracklist is found
         if (!$tracklist_el->htmlOuter()){
@@ -188,14 +184,25 @@ class XSPFPL_Single_Playlist {
         // if last call to get_tracks() is <2min, 
         // return cached tracks
 
-        if ( (!$this->is_wizard) && ($this->post_id) ){
+        if ( ($this->post_id) ){
             
             $cachemeta =  xspfpl_get_tracks_cache($this->post_id);
-            
+
             if ( isset($cachemeta['time']) && isset($cachemeta['tracks'] ) ){
 
-                $limit = current_time( 'timestamp' ) - $cachemeta['time'];
-                if (xspfpl()->cache_tracks_intval > $limit) $tracks = $cachemeta['tracks'];
+                if (!$this->get_option('is_static')){ //dynamic playlist, check against cache time
+                    
+                    if (!$this->is_wizard){
+                        $limit = current_time( 'timestamp' ) - $cachemeta['time'];
+                        if ( xspfpl()->get_option('cache_tracks_intval') > $limit ) $tracks = $cachemeta['tracks'];
+                    }
+                    
+                }else{ //static playlist, get whole cache
+                    
+                    $tracks = $cachemeta['tracks'];
+                    
+                }
+
                 
             }
 
@@ -203,23 +210,20 @@ class XSPFPL_Single_Playlist {
 
         if (empty($tracks)){
 
-            if ( (!$this->is_wizard) && (!$this->track_artist_selector) ){
+            if ( (!$this->is_wizard) && (!$this->get_option('track_artist_selector')) ){
                 $this->errors->add( 'tracks_selector_empty', __('The track artist selector is empty','xspfpl') );
                 return false;
             }
 
-            if ( (!$this->is_wizard) && (!$this->track_title_selector) ){
+            if ( (!$this->is_wizard) && (!$this->get_option('track_title_selector')) ){
                 $this->errors->add( 'tracks_selector_empty', __('The track title selector is empty','xspfpl') );
                 return false;
             }
 
             $tracklist_items = self::get_tracklist();
-            
-            
 
             if ($tracklist_items){
 
-                
                 // Get all tracks
                 foreach($tracklist_items as $key=>$track) {
 
@@ -232,12 +236,12 @@ class XSPFPL_Single_Playlist {
                     $newtrack['title'] = strip_tags(self::get_dom_element_content($track,'title'));
 
                     //album
-                    if($this->track_album_selector)
+                    if($this->get_option('track_album_selector'))
                         $newtrack['album'] = strip_tags(self::get_dom_element_content($track,'album'));
 
                     //picture
-                    if($this->track_album_art_selector){
-                        $url = pq($track)->find($this->track_album_art_selector)->attr('src');
+                    if($this->get_option('track_album_art_selector')){
+                        $url = pq($track)->find($this->get_option('track_album_art_selector'))->attr('src');
                         if(filter_var($url, FILTER_VALIDATE_URL)){
                             $newtrack['image'] = $url;
                         }
@@ -246,7 +250,7 @@ class XSPFPL_Single_Playlist {
 
                     //comment
                     /*
-                    $time = pq($track)->find($this->track_album_art_selector)->htmlOuter();
+                    $time = pq($track)->find($this->get_option('track_album_art_selector'))->htmlOuter();
                     $newtrack['comments'][] = sprintf('played %s', $time); //x min ago
                      */
 
@@ -275,15 +279,15 @@ class XSPFPL_Single_Playlist {
             //array unique
             $tracks = array_unique($tracks, SORT_REGULAR);
 
-            //limit tracklist
-            if ($this->max_tracks){
-                $tracks = array_slice($tracks, 0, (int)$this->max_tracks);
+            //limit dynamic tracklist
+            if ( ($this->get_option('max_tracks')) && (!$this->get_option('is_static')) && (!$this->is_wizard) ){
+                $tracks = array_slice($tracks, 0, (int)$this->get_option('max_tracks'));
             }
 
             //some radios have bad metadatas
             //try to correct them using musicbrainz.
-            //ignore while running wizard.
-            if ((!$this->is_wizard) && ($this->musicbrainz)){
+            //ignore while running wizard (if the playlist is not static)
+            if ( ($this->get_option('musicbrainz')) && ( (!$this->is_wizard) || ($this->get_option('is_static')) ) ){
 
                 foreach ((array)$tracks as $key=>$track){
                     $tracks[$key] = $this->musicbrainz_lookup($track);
@@ -425,11 +429,14 @@ class XSPFPL_Single_Playlist {
         $new_track['artist'] = implode(' & ',$artists_names_arr);
         
         //album
-        $albums = $match->releases;
+        if(isset($match->releases)){
+            $albums = $match->releases;
 
-        if(isset($albums[0])){
-            $new_track['album'] = $albums[0]->title;
+            if(isset($albums[0])){
+                $new_track['album'] = $albums[0]->title;
+            }
         }
+
 
         //comment
         $new_track['comments'] = $track['comments'];
@@ -504,7 +511,7 @@ class XSPFPL_Single_Playlist {
 
         $pl_annot_el = $dom->createElement("annotation");
         $playlist_el->appendChild($pl_annot_el);
-        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspfpl()->name,xspfpl()->author,date(get_option('date_format')),date(get_option('time_format')),$this->tracklist_url));
+        $pl_annot_txt_el = $dom->createTextNode(sprintf(__('Playlist generated with the %1s Plugin by %2s on %3s at %4s.  Original playlist URL : %5s','thl-plp'),xspfpl()->name,xspfpl()->author,date(get_option('date_format')),date(get_option('time_format')),$this->get_option('tracklist_url')));
         $pl_annot_el->appendChild($pl_annot_txt_el);
 
         // tracklist
@@ -563,12 +570,15 @@ class XSPFPL_Single_Playlist {
                 $track_img->appendChild($track_img_txt);
             }
             
-            //info (toma.hk link)
-            $tomahk_url = 'http://toma.hk/?artist='.urlencode($newtrack['artist']).'&title='.urlencode($newtrack['title']);
-            $track_info = $dom->createElement("info");
-            $track_el->appendChild($track_info);
-            $track_info_txt = $dom->createTextNode($tomahk_url);
-            $track_info->appendChild($track_info_txt);
+            //info (hatchet.is link)
+            if (class_exists('Hatchet')){
+                $hatchet_url = hatchet_get_track_link($newtrack['artist'],$newtrack['title']);
+                $track_info = $dom->createElement("info");
+                $track_el->appendChild($track_info);
+                $track_info_txt = $dom->createTextNode($hatchet_url);
+                $track_info->appendChild($track_info_txt);
+            }
+
 
             $pl_tracklist_el->appendChild($track_el);
         }

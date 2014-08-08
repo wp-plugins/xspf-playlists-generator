@@ -4,7 +4,7 @@
  * Plugin URI: http://radios.pencil2d.org
  * Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
  * Author: G.Breant
- * Version: 0.2.1
+ * Version: 0.3.0
  * Author URI: http://radios.pencil2d.org
  * License: GPL2+
  * Text Domain: xspfpl
@@ -12,7 +12,9 @@
  */
 
 
-//Hatchet.is API : https://api.hatchet.is/apidocs/#!/playlists
+/**
+ * Plugin Main Class
+ */
 
 class XSPFPL_Core {
     
@@ -24,12 +26,12 @@ class XSPFPL_Core {
     /**
     * @public string plugin version
     */
-    public $version = '0.2.1';
+    public $version = '0.3.0';
 
     /**
     * @public string plugin DB version
     */
-    public $db_version = '110';
+    public $db_version = '111';
 
     /** Paths *****************************************************************/
 
@@ -51,14 +53,15 @@ class XSPFPL_Core {
     */
     private static $instance;
 
-    var $admin;
+    var $options_default = array();
+    var $options = array();
 
     public $post_type='playlist';
+    public $tax_tag='playlist_tag';
     public $xpsf_render_var='xspf';
 
-    var $cache_tracks_intval = 120; // validity of tracks cache, in seconds
-    
     static $meta_key_db_version = 'xspfpl-db';
+    static $meta_key_options = 'xspfpl-options';
 
 
     public static function instance() {
@@ -88,8 +91,16 @@ class XSPFPL_Core {
             $this->plugin_dir = plugin_dir_path( $this->file );
             $this->plugin_url = plugin_dir_url ( $this->file );
 
-
-
+            //options
+            $this->options_default = array(
+                'xspf_link'             => 'on',
+                'cache_tracks_intval'   => 120,
+                'widget_embed'          => 'on',
+                
+            );
+            $options = get_option( self::$meta_key_options, $this->options_default );
+            $this->options = apply_filters('xspfpl_options',$options);
+            
     }
 
     function includes(){
@@ -100,20 +111,32 @@ class XSPFPL_Core {
         require( $this->plugin_dir . 'xspfpl-wizard.php' );
         require( $this->plugin_dir . 'xspfpl-playlist.php');
         require( $this->plugin_dir . 'xspfpl-playlist-stats.php' );
+        
+        //we need the Hatchet.is plugin ! 
+        //https://wordpress.org/plugins/wp-hatchet/
+        if ( class_exists('Hatchet') ){
+            //require( $this->plugin_dir . 'xspfpl-hatchet.php');
+        }
+        
         require( $this->plugin_dir . 'xspfpl-templates.php');
 
         //admin
         if(is_admin()){
             require($this->plugin_dir . 'xspfpl-admin.php');
-            $this->admin = new XSPFPL_Admin_Wizard();
+            require($this->plugin_dir . 'xspfpl-admin-options.php');
+            require($this->plugin_dir . 'xspfpl-admin-wizard.php');
         }
 
     }
 
     function setup_actions(){    
-        
-        add_action( 'plugins_loaded', array($this, 'upgrade'));//install and upgrade
+
+        register_activation_hook( $this->file , array( $this, 'set_roles_capabilities' ) );//roles & capabilities
+
         add_action( 'init', array(&$this,'register_post_type' ));
+        add_action( 'init', array(&$this,'register_taxonomy' ));
+        
+        add_action( 'init' , array($this, 'upgrade'));//install and upgrade
 
         add_action( 'init', array(&$this,'add_xspf_endpoint' ));            
         add_filter( 'request', array($this, 'filter_request'));
@@ -125,9 +148,36 @@ class XSPFPL_Core {
 
         add_action( 'wp_enqueue_scripts', array($this, 'scripts_styles'));
 
-        add_filter( 'the_content', array(&$this,'the_content_links' ));
-        add_filter( 'the_content', array(&$this,'the_content_tomahk_playlist' )); //singular
+        add_filter( 'the_content', array(&$this,'embed_xspf_link' ));
 
+    }
+    
+    //needed for 110->111 update. We can remove this after a while.
+    function upgrade_tags_taxonomy(){
+        $query_args = array(
+            'post_type'         => $this->post_type,
+            'posts_per_page'    => -1,
+            'fields'            => 'ids'
+        );
+
+        $query = new WP_Query( $query_args );
+        
+        foreach ($query->posts as $id){
+            $tags_names=array();
+            $tags = get_the_terms( $id, 'post_tag' );
+            
+            if ($tags){
+                foreach($tags as $tag){
+                    $tags_names[] = $tag->name;
+                }
+                if (!empty($tags_names)){
+                    if ($result = wp_set_post_terms( $id, $tags_names, $this->tax_tag)){ //set custom taxonomy
+                        wp_set_post_terms( $id, array(), 'post_tag'); //set custom taxonomy
+                    }
+                }
+            }
+
+        }
     }
     
     //needed for 109 update. We can remove this after a while.
@@ -145,12 +195,13 @@ class XSPFPL_Core {
         
         //upgrade from 109
         $old_db_option_name = '_xspf-plgen-db';
+        
 ;        if ($current_version = get_option($old_db_option_name)){
             
             //upgrade from 107 to 109 - merging settings into one single meta key
             if ( $current_version < 109 ){
 
-                $default = XSPFPL_Single_Playlist::get_default_args();
+                $default = XSPFPL_Single_Playlist::get_default_options();
                 $meta_key = XSPFPL_Single_Playlist::$meta_key_settings;
                 $query_args = array(
                     'post_type'         => $this->post_type,
@@ -192,11 +243,17 @@ class XSPFPL_Core {
             delete_option( $old_db_option_name );
             
         }
+        
 
         //> 109
         $current_version = get_option(self::$meta_key_db_version);
-
         if ( $current_version==$this->db_version ) return;
+        
+        //> 110
+        if ( $current_version < 111 ) {
+            self::upgrade_tags_taxonomy();
+        }
+        
 
         //install
         if(!$current_version){
@@ -208,6 +265,16 @@ class XSPFPL_Core {
 
         //upgrade DB version
         update_option(self::$meta_key_db_version, $this->db_version );//upgrade DB version
+    }
+    
+    public function get_option($name){
+        if (!isset($this->options[$name])) return;
+        return $this->options[$name];
+    }
+    
+    public function get_default_option($name){
+        if (!isset($this->options_default[$name])) return;
+        return $this->options_default[$name];
     }
 
     function scripts_styles(){
@@ -271,49 +338,20 @@ class XSPFPL_Core {
      * @return string 
      */
 
-    function the_content_links($content){
-        global $post;
+    function embed_xspf_link($content){
         
-        if ($post->post_type!=$this->post_type) return $content;
+        if(!is_single()) return $content;
+        if ( get_post_type()!=$this->post_type ) return $content;
+        if (!xspfpl()->get_option('xspf_link')) return $content;
         
         $new_content='';
 
         $link_xspf = xspfpl_get_xspf_permalink();
-
-        $link_tomahk = xspfpl_get_tomahk_playlist_link();
         
         if($link_xspf)
-            $new_content .= '<a href="'.$link_xspf.'" class="xspfpl-link"><b>'.__('Link to XSPF file','xspfpl').'</b></a>';
-        
-        if(!is_singular()){
-            if($link_tomahk)
-                $new_content .= '<a href="'.$link_tomahk.'" class="xspfpl-link"><b>'.__('Toma.hk Playlist','xspfpl').'</b></a>';
-        }
-        
+            $new_content .= '<a href="'.$link_xspf.'" class="xspf-link">'.__('Link to XSPF file','xspfpl').'</a>';
 
-        $content='<p class="xspfpl-links">'.$new_content.'</p>'.$content;
-
-        return $content;
-
-    }
-
-    
-    /**
-     * Filter the content of a playlist post and adds the toma.hk iframe to it.
-     * @global type $post
-     * @param type $content
-     * @return type 
-     */
-
-
-    function the_content_tomahk_playlist($content){
-        global $post;
-
-        if (get_post_type()!=$this->post_type) return $content;
-
-        if(!is_singular()) return $content;
-        
-        $content.=xspfpl_get_tomahk_playlist();
+        $content = $new_content.$content;
 
         return $content;
 
@@ -340,7 +378,7 @@ class XSPFPL_Core {
             'hierarchical' => false,
 
             'supports' => array( 'title', 'editor','thumbnail', 'comments' ),
-            'taxonomies' => array( 'post_tag' ),
+            'taxonomies' => array( $this->tax_tag ),
             'public' => true,
             'show_ui' => true,
             'show_in_menu' => true,
@@ -351,11 +389,103 @@ class XSPFPL_Core {
             'query_var' => true,
             'can_export' => true,
             'rewrite' => true,
-            'capability_type' => 'post'
+            //http://justintadlock.com/archives/2013/09/13/register-post-type-cheat-sheet
+            'capability_type' => 'playlist',
+            'map_meta_cap'        => true,
+            'capabilities' => array(
+
+                // meta caps (don't assign these to roles)
+                'edit_post'              => 'edit_playlist',
+                'read_post'              => 'read_playlist',
+                'delete_post'            => 'delete_playlist',
+
+                // primitive/meta caps
+                'create_posts'           => 'create_playlists',
+
+                // primitive caps used outside of map_meta_cap()
+                'edit_posts'             => 'edit_playlists',
+                'edit_others_posts'      => 'manage_playlists',
+                'publish_posts'          => 'manage_playlists',
+                'read_private_posts'     => 'read',
+
+                // primitive caps used inside of map_meta_cap()
+                'read'                   => 'read',
+                'delete_posts'           => 'manage_playlists',
+                'delete_private_posts'   => 'manage_playlists',
+                'delete_published_posts' => 'manage_playlists',
+                'delete_others_posts'    => 'manage_playlists',
+                'edit_private_posts'     => 'edit_playlists',
+                'edit_published_posts'   => 'edit_playlists'
+            ),
         );
 
         register_post_type( $this->post_type, $args );
     }
+    
+    function register_taxonomy() {
+        
+        $labels = array(
+                'name'                       => _x( 'Tags', 'taxonomy general name' ),
+                'singular_name'              => _x( 'Tag', 'taxonomy singular name' ),
+                'search_items'               => __( 'Search Tags' ),
+                'popular_items'              => __( 'Popular Tags' ),
+                'all_items'                  => __( 'All Tags' ),
+                'parent_item'                => null,
+                'parent_item_colon'          => null,
+                'edit_item'                  => __( 'Edit Tag' ),
+                'update_item'                => __( 'Update Tag' ),
+                'add_new_item'               => __( 'Add New Tag' ),
+                'new_item_name'              => __( 'New Tag Name' ),
+                'separate_items_with_commas' => __( 'Separate tags with commas' ),
+                'add_or_remove_items'        => __( 'Add or remove tags' ),
+                'choose_from_most_used'      => __( 'Choose from the most used tags' ),
+                'not_found'                  => __( 'No tags found.' ),
+                'menu_name'                  => __( 'Tags' ),
+        );
+
+        $args = array(
+                'hierarchical'          => false,
+                'labels'                => $labels,
+                'show_ui'               => true,
+                'show_admin_column'     => true,
+                'update_count_callback' => '_update_post_term_count',
+                'query_var'             => true,
+                'rewrite'               => array( 'slug' => $this->tax_tag ),
+                'capabilities' => array(
+                    'manage_terms' => 'manage_playlists',
+                    'edit_terms' => 'edit_playlists',
+                    'delete_terms' => 'edit_playlists',
+                    'assign_terms' => 'edit_playlists'
+                )
+        );
+
+        register_taxonomy( $this->tax_tag, $this->post_type, $args );
+    }
+    
+        function set_roles_capabilities(){
+            
+            global $wp_roles;
+            if ( ! isset( $wp_roles ) ) $wp_roles = new WP_Roles();
+
+            //create a new role, based on the subscriber role 
+            $role_name = 'playlist_author';
+            $subscriber = $wp_roles->get_role('subscriber');
+            $wp_roles->add_role($role_name,__('Playlist Author','xspfpl'), $subscriber->capabilities);
+
+            //list of custom capabilities and which role should get it
+            $wiki_caps=array(
+                'manage_playlists'=>array('administrator','editor'),
+                'edit_playlists'=>array('administrator','editor',$role_name),
+                'create_playlists'=>array('administrator','editor',$role_name),
+            );
+
+            foreach ($wiki_caps as $wiki_cap=>$roles){
+                foreach ($roles as $role){
+                    $wp_roles->add_cap( $role, $wiki_cap );
+                }
+            }
+
+        }
     
 
 
