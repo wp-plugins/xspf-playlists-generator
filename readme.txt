@@ -13,7 +13,7 @@ Parse tracklists from websites and generate a dynamic XSPF file out of it !
 
 This plugin allows you to parse any tracklist found on internet and generate a dynamic [XSPF](http://en.wikipedia.org/wiki/XSPF/) file out of it.
 
-The idea behind this plugin is that you can parse tracklists from radio stations websites (for example, but it could also be static playlists) and listen to them directly on your website (with a Hatchet.is playlist embed) or within [Tomahawk](http://www.tomahawk-player.org/) (with the XSPF link).
+The idea behind this plugin is that you can parse tracklists from radio stations websites (for example, but it could also be static playlists) to create dynamic play(able)list you can listen directly on your website (with a Hatchet.is playlist widget) or within Tomahawk (with the XSPF file URL). 
 So you are able to listen to the tracks provided by those stations, without the ads and the chat !
 
 This plugin has been developped for the website [XSPF Radios HQ](http://radios.pencil2d.org/).
@@ -21,13 +21,13 @@ If you just want quickly create a dynamic XSPF file, maybe you don't need to ins
 head towards XSPF Radios HQ and [create directly your playlist](http://radios.pencil2d.org/wordpress/wp-admin/post-new.php?post_type=playlist) there !
 
 = Create a new playlist =
-
+*(Requires a basic knowledge of CSS and HTML)*
 In the Wordpress backend, you can create/manage playlists in the "Playlist Parsers" section of the left menu.
 It works like regular posts (add your playlist title, description, featured image...), but there is a new metabox (Playlist Parser Wizard) under the editor :
 Fill the informations required (tracklist URL, tracks selector, ...) then save your post.
 
 You can also check an option to compare tracks data to [MusicBrainz](http://musicbrainz.org/) entries, which try to get more accurate metadatas for the tracks (but is slower).
-Other options are available under Playlist Parsers > Options
+Other options are available under Playlist Parsers > Options.
 
  
 = Demo =
