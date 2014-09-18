@@ -26,11 +26,44 @@ function xspfpl_get_xspf_permalink($post_id=false){
     }else{
         $url = add_query_arg(array(xspfpl()->xpsf_render_var => true),$post_permalink);
     }
+    
+    $url = apply_filters('xspfpl_get_xspf_permalink',$url,$post_id);
+    
+    //THK friendly
+    if (xspfpl()->get_option('thk_friendly') == 'on'){
+        $url = add_query_arg( array('xspf' => $url), 'tomahawk://import/playlist' );
+    }
 
 
-    return apply_filters('xspfpl_get_xspf_permalink',$url,$post_id);
+    return $url;
 
 }
+
+function xspfpl_playlist_link($post_id=false){
+    echo xspfpl_get_playlist_link($post_id);
+}
+
+function xspfpl_get_playlist_link($post_id=false){
+    
+    $link_block = '';
+    $link_xspf = xspfpl_get_xspf_permalink($post_id);
+
+    $classes = array('xspf-link');
+
+    //THK friendly
+    if (xspfpl()->get_option('thk_friendly') == 'on'){
+        $link_text = __('Add to Tomahawk','xspfpl');
+        $classes[] = 'thk-friendly';
+    }else{
+        $link_text = __('Link to XSPF file','xspfpl');
+    }
+
+    if($link_xspf)
+        $link_block = '<a href="'.$link_xspf.'"'.xspf_get_classes($classes).'>'.$link_text.'</a>';
+
+    return $link_block;
+}
+
 
 /*
  * Checks if the playlist is still alive : each time tracks are populated,

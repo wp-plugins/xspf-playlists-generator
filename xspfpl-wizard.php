@@ -182,6 +182,18 @@ class XSPFPL_Playlist_Wizard {
                             <?php _e('(Ignored in the wizard, for non-freezed playlists)','xspfpl');?>
                         </p>
                     </div>
+                    <!-- order -->
+                    <div>
+                        <?php
+                        $tracks_order = $this->playlist->get_option('tracks_order');
+                        ?>
+                        <label style="display:inline" for="<?php $this->field_name('tracks_order');?>"><?php _e('Tracks order:','xspfpl');?> </label>
+                            <input id="<?php $this->field_name('tracks_order_desc');?>" name="<?php $this->field_name('tracks_order');?>" type="radio"<?php checked($tracks_order,'DESC');?> value="DESC"/> <?php _e('Descending','xspfpl');?>
+                            <input id="<?php $this->field_name('tracks_order_asc');?>" name="<?php $this->field_name('tracks_order');?>" type="radio"<?php checked($tracks_order,'ASC');?> value="ASC"/> <?php _e('Ascending','xspfpl');?>
+                        <p class="xspfpl-info">
+                            <?php _e('On the playlist page, where is the most recent track ?  Choose "Descending" if it is on top, choose "Ascending" if it is in at the bottom.','xspfpl');?>
+                        </p>
+                    </div>
                     <!-- Is static -->
                     <div>
                         <?php
@@ -285,25 +297,22 @@ class XSPFPL_Playlist_Wizard {
         echo '<div class="feedback-wrapper"><span class="feedback-link"><a href="#">'.__('Show input','xspfpl').'</a></span><div class="feedback-content">'.$feedback.'</div></div>';
         
     }
-    
 
-    
-    
-    static function wizard_save($post_id){
+    function save_playlist_settings(){
         
-            $args = array();
-            $default_args = XSPFPL_Single_Playlist::get_default_options();
-            
-            $data = self::get_wizard_data();
+        $args = array();
+        $default_args = XSPFPL_Single_Playlist::get_default_options();
 
-            //remove default values
-            foreach ( $data as $slug => $value ){
-                if ( $value==$default_args[$slug] ) unset($data[$slug]);
-            }
+        $data = self::get_wizard_data();
 
-            update_post_meta( $post_id, XSPFPL_Single_Playlist::$meta_key_settings, $data );
+        //remove default values
+        foreach ( $data as $slug => $value ){
+            if ( $value==$default_args[$slug] ) unset($data[$slug]);
+        }
 
-            do_action('xspfpl_save', $data, $post_id);
+        update_post_meta( $this->playlist->post_id, XSPFPL_Single_Playlist::$meta_key_settings, $data );
+
+        do_action('xspfpl_save_playlist_settings', $data, $this->playlist->post_id);
 
     }
     
@@ -343,6 +352,14 @@ class XSPFPL_Playlist_Wizard {
         if (isset($input['track_title_regex'])) $new_input['track_title_regex'] = addslashes($input['track_title_regex']);
         if (isset($input['track_album_regex'])) $new_input['track_album_regex'] = addslashes($input['track_album_regex']);
 
+        //order
+        $available_order = array('ASC','DESC');
+        if (isset($input['tracks_order'])){
+            if (in_array($input['tracks_order'],$available_order)){
+                $new_input['tracks_order'] = $input['tracks_order'];
+            }
+        }
+        
         //musicbrainz
         if (isset($input['musicbrainz'])) $new_input['musicbrainz'] = $input['musicbrainz'];
         

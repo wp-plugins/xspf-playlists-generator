@@ -13,7 +13,7 @@ Parse tracklists from websites and generate a dynamic XSPF file out of it !
 
 This plugin allows you to parse any tracklist found on internet and generate a dynamic [XSPF](http://en.wikipedia.org/wiki/XSPF/) file out of it.
 
-The idea behind this plugin is that you can parse tracklists from radio stations websites (for example, but it could also be static playlists) to create dynamic play(able)list you can listen directly on your website (with a Hatchet.is playlist widget) or within Tomahawk (with the XSPF file URL). 
+The idea behind this plugin is that you can parse tracklists from radio stations websites (for example, but it could also be static playlists) to create dynamic play(able)list you can listen directly on your website (with a Hatchet.is playlist widget) or within Tomahawk. 
 So you are able to listen to the tracks provided by those stations, without the ads and the chat !
 
 This plugin has been developped for the website [XSPF Radios HQ](http://radios.pencil2d.org/).
@@ -61,7 +61,7 @@ Upload the plugin to your blog and Activate it.
 
 = How can I display the XSPF link in my templates ? =
 
-See function xspfpl_get_xspf_permalink() in xspfpl-templates.php.
+See function xspfpl_playlist_link() in xspfpl-templates.php.
 
 = How can I display a Hatchet.is playlist in my templates ? =
 
@@ -74,6 +74,11 @@ Then, you can enable embedding playlists widget in Playlist Parsers > Options, o
 3. Options page (backend)
 
 == Changelog ==
+= 0.3.1 =
+* Added "Tomahawk Friendly" plugin's option; to use Tomahawk protocol for playlists links.
+* Added functions xspfpl_playlist_link() and xspfpl_get_playlist_link().
+* Added "Order" playlist option
+* Cleaned up some code
 = 0.3.0 =
 * + lots of bugs fixes and improvements
 * static playlists (do not re-parse the URL each time) option.

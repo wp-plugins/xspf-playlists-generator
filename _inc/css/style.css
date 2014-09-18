@@ -7,3 +7,10 @@
     display:inline-block;
     margin-right:10px;
 }
+
+a.xspf-link.thk-friendly{
+    background-color:#e74c3c;
+}
+a.xspf-link.thk-friendly:hover{
+    background-color:#d62c1a;
+}

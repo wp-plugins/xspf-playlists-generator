@@ -42,6 +42,7 @@ class XSPFPL_Single_Playlist {
         $default = array(
             'tracklist_url'             => null, //url to parse
             'tracks_selector'           => null,
+            'tracks_order'              => 'DESC',
             'track_artist_selector'     => null,
             'track_artist_regex'        => null,
             'track_title_selector'      => null,
@@ -119,7 +120,7 @@ class XSPFPL_Single_Playlist {
         //allows us to filter the parameters depending on the URL
         $remote_args = apply_filters('xspfpl_get_page_args',array(),$this->get_option('tracklist_url'));
         $response = wp_remote_get( $this->get_option('tracklist_url'), $remote_args );
-        
+
         if (is_wp_error($response)){
             $this->errors->add( 'tracklist_page_empty', __('There was an error fetching the content from this URL.','xspfpl') );
             return false;
@@ -278,6 +279,11 @@ class XSPFPL_Single_Playlist {
 
             //array unique
             $tracks = array_unique($tracks, SORT_REGULAR);
+            
+            //sort
+            if ($this->get_option('tracks_order') == 'ASC'){
+                $tracks = array_reverse($tracks);
+            }
 
             //limit dynamic tracklist
             if ( ($this->get_option('max_tracks')) && (!$this->get_option('is_static')) && (!$this->is_wizard) ){
@@ -300,21 +306,14 @@ class XSPFPL_Single_Playlist {
 
             }
 
-            //save time & tracks
-            if ($this->post_id){
-                $cachemeta = array(
-                    'time'      => current_time( 'timestamp' ),
-                    'tracks'    => $tracks
-                );
-                update_post_meta($this->post_id, self::$meta_key_tracks_cache, $cachemeta);
-            }
+
             
         }
 
-        return apply_filters('xspfpl_tracks',$tracks);
+        return apply_filters('xspfpl_get_tracks',$tracks,$this);
         
     }
-    
+
     function get_dom_element_content($track,$slug){
         
         $result = '';

@@ -61,8 +61,9 @@ class XSPFPL_Admin_Wizard {
 
         if ($is_autosave || $is_revision || !$is_valid_nonce) return;
         if( get_post_type($post_id)!=xspfpl()->post_type ) return;
-        
-        XSPFPL_Playlist_Wizard::wizard_save($post_id);
+
+        $this->wizard = new XSPFPL_Playlist_Wizard($post_id);
+        $this->wizard->save_playlist_settings();
     }
 
 }

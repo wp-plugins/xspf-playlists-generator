@@ -88,9 +88,17 @@ class XSPFPL_Admin_Options{
         );
         
         add_settings_field(
-            'xspf_link', 
-            __('XSPF link','xspfpl'), 
-            array( $this, 'xspf_link_callback' ), 
+            'playlist_link', 
+            __('Embed playlist link','xspfpl'), 
+            array( $this, 'playlist_link_callback' ), 
+            'xspfpl-settings-admin', 
+            'settings_playlist'
+        );
+        
+        add_settings_field(
+            'thk_friendly', 
+            __('Tomahawk Friendly','xspfpl'), 
+            array( $this, 'tomahawk_friendly_callback' ), 
             'xspfpl-settings-admin', 
             'settings_playlist'
         );
@@ -136,8 +144,12 @@ class XSPFPL_Admin_Options{
         }else{ //sanitize values
 
             
-            if( isset( $input['xspf_link'] ) ){
-                $new_input['xspf_link'] = $input['xspf_link'];
+            if( isset( $input['playlist_link'] ) ){
+                $new_input['playlist_link'] = $input['playlist_link'];
+            }
+            
+            if( isset( $input['thk_friendly'] ) ){
+                $new_input['thk_friendly'] = $input['thk_friendly'];
             }
             
             if( isset( $input['widget_embed'] ) ){
@@ -167,15 +179,31 @@ class XSPFPL_Admin_Options{
     public function section_playlist_desc(){
     }
     
-    public function xspf_link_callback(){
-        $option = xspfpl()->get_option('xspf_link');
+    public function playlist_link_callback(){
+        $option = xspfpl()->get_option('playlist_link');
 
         $checked = checked( (bool)$option, true, false );
-        $desc = __('Adds automatically an XPSF link after post content.','xspfpl');
-        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_get_xspf_permalink()</code>').'</small>';
+        $desc = __('Adds automatically a link to the playlist in the post content.','xspfpl');
+        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_playlist_link()</code>').'</small>';
                 
         printf(
-            '<input type="checkbox" name="%1$s[xspf_link]" value="on" %2$s/> %3$s<br/>%4$s',
+            '<input type="checkbox" name="%1$s[playlist_link]" value="on" %2$s/> %3$s<br/>%4$s',
+            XSPFPL_Core::$meta_key_options,
+            $checked,
+            $desc,
+            $help
+        );
+    }
+    
+    public function tomahawk_friendly_callback(){
+        $option = xspfpl()->get_option('thk_friendly');
+
+        $checked = checked( (bool)$option, true, false );
+        $desc = __('Format playlist links to be Tomahawk-friendly.','xspfpl');
+        $help = '<small>'.sprintf(__('Use the %1$s protocol, so %2$s automatically loads the playlist when the link is clicked.  If disabled, clicking the playlist link will display the XSPF file content.','xspfpl'),'<code>tomahawk://</code>','<a href="http://www.tomahawk-player.org/" target="_blank">Tomahawk</a>').'</small>';
+                
+        printf(
+            '<input type="checkbox" name="%1$s[thk_friendly]" value="on" %2$s/> %3$s<br/>%4$s',
             XSPFPL_Core::$meta_key_options,
             $checked,
             $desc,

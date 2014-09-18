@@ -4,7 +4,7 @@
  * Plugin URI: http://radios.pencil2d.org
  * Description: Parse tracklists from websites and generate a dynamic XSPF file out of it; with its a Toma.hk playlist URL.  You even can <strong>import</strong> (Tools > Import > Wordpress) our selection of stations from this <a href="https://github.com/gordielachance/xspf-playlists-generator/blob/master/HQstations.xml">XML file</a>.
  * Author: G.Breant
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author URI: http://radios.pencil2d.org
  * License: GPL2+
  * Text Domain: xspfpl
@@ -26,7 +26,7 @@ class XSPFPL_Core {
     /**
     * @public string plugin version
     */
-    public $version = '0.3.0';
+    public $version = '0.3.1';
 
     /**
     * @public string plugin DB version
@@ -93,7 +93,8 @@ class XSPFPL_Core {
 
             //options
             $this->options_default = array(
-                'xspf_link'             => 'on',
+                'playlist_link'         => 'on',
+                'thk_friendly'          => 'on',
                 'cache_tracks_intval'   => 120,
                 'widget_embed'          => 'on',
                 
@@ -148,8 +149,24 @@ class XSPFPL_Core {
 
         add_action( 'wp_enqueue_scripts', array($this, 'scripts_styles'));
 
-        add_filter( 'the_content', array(&$this,'embed_xspf_link' ));
+        add_filter( 'the_content', array(&$this,'embed_playlist_link' ));
+        
+        add_action('xspfpl_populate_tracks',array($this,'update_tracks_cache'));
 
+    }
+    
+    function update_tracks_cache($playlist){
+        
+        if ($playlist->is_wizard) return;
+        
+        //save time & tracks
+        if ($playlist->post_id){
+            $cachemeta = array(
+                'time'      => current_time( 'timestamp' ),
+                'tracks'    => $playlist->tracks
+            );
+            update_post_meta($playlist->post_id, XSPFPL_Single_Playlist::$meta_key_tracks_cache, $cachemeta);
+        }
     }
     
     //needed for 110->111 update. We can remove this after a while.
@@ -338,20 +355,15 @@ class XSPFPL_Core {
      * @return string 
      */
 
-    function embed_xspf_link($content){
+    function embed_playlist_link($content){
         
         if(!is_single()) return $content;
         if ( get_post_type()!=$this->post_type ) return $content;
-        if (!xspfpl()->get_option('xspf_link')) return $content;
+        if (!xspfpl()->get_option('playlist_link')) return $content;
         
-        $new_content='';
+        $link_block = xspfpl_get_playlist_link();
 
-        $link_xspf = xspfpl_get_xspf_permalink();
-        
-        if($link_xspf)
-            $new_content .= '<a href="'.$link_xspf.'" class="xspf-link">'.__('Link to XSPF file','xspfpl').'</a>';
-
-        $content = $new_content.$content;
+        $content = $link_block.$content;
 
         return $content;
 
