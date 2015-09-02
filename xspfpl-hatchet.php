@@ -18,7 +18,7 @@ class XSPFPL_Hatchet {
         //add_filter( 'the_content', array(&$this,'embed_playlist_widget' )); //singular
         
         //update hatchet playlist
-        //add_action( 'xspfpl_populate_tracks', array(&$this,'update_hatchet_playlist') );
+        //add_action( 'xspfpl_populated_playlist_tracks', array(&$this,'update_hatchet_playlist') );
         
         //delete hatchet playlist when a WP playlist is deleted
         //add_action( 'before_delete_post', array(&$this,'delete_hatchet_playlist') );
@@ -41,8 +41,8 @@ class XSPFPL_Hatchet {
         if (!class_exists('Hatchet')) return $content;
         
         if(!is_single()) return $content;
-        if ( get_post_type()!=xspfpl()->post_type ) return $content;
-        if (!xspfpl()->get_option('widget_embed')) return $content;
+        if ( get_post_type()!=xspfpl()->station_post_type ) return $content;
+        if (!xspfpl()->get_options('enable_hatchet')) return $content;
 
         if ($hatchet_id = self::get_hatchet_id()){
             if ($widget = xspfpl_get_widget_playlist()){
@@ -59,7 +59,7 @@ class XSPFPL_Hatchet {
     
     function prepare_hatchet_playlist($wp_playlist){
         $playlist = new Hatchet_Playlist();
-        $playlist->title = $wp_playlist->playlist_title;
+        $playlist->title = $wp_playlist->playlist_datas['title'];
         return $playlist;
     }
     
@@ -99,7 +99,7 @@ class XSPFPL_Hatchet {
         
         if (!$post_id) $post_id = get_the_ID();
         
-        if ( get_post_type( $post_id ) != xspfpl()->post_type ) return;
+        if ( get_post_type( $post_id ) != xspfpl()->station_post_type ) return;
 
         if ($hatchet_id != self::get_hatchet_id($post_id) ) return;
 

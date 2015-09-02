@@ -3,18 +3,16 @@
 class XSPFPL_Admin {
 
     function __construct() {
-
         self::setup_globals();
         self::includes();
         self::setup_actions();
-
     }
 
     function setup_globals() {
-        $this->column_name_dynamic = 'xspfpl_dynamic';
+        $this->column_name_synced = 'xspfpl_synced';
         $this->column_name_health = 'xspfpl_health';
         $this->column_name_last_track = 'xspfpl_last_track';
-        $this->column_name_loads = 'xspfpl_loads';
+        $this->column_name_requests_count = 'xspfpl_loads';
     }
 
     function includes(){
@@ -22,6 +20,7 @@ class XSPFPL_Admin {
     }
 
     function setup_actions(){
+
         add_action( 'admin_enqueue_scripts',  array( $this, 'scripts_styles' ) );
         add_filter('manage_posts_columns', array(&$this,'post_column_register'), 5);
         add_action('manage_posts_custom_column', array(&$this,'post_column_content'), 5, 2);
@@ -32,14 +31,14 @@ class XSPFPL_Admin {
      * Scripts for backend
      */
     public function scripts_styles($hook) {
-        if( ( get_post_type()!=xspfpl()->post_type ) && ($hook != 'playlist_page_xspfpl-options') ) return;
+        if( ( get_post_type()!=xspfpl()->station_post_type ) && ($hook != 'playlist_page_xspfpl-options') ) return;
         wp_enqueue_style( 'xspfpl-admin', xspfpl()->plugin_url .'_inc/css/admin.css', array(), xspfpl()->version );
     }
     
 
     function post_column_register($defaults){
 
-        if ( get_post_type() != xspfpl()->post_type) return $defaults;
+        if ( get_post_type() != xspfpl()->station_post_type) return $defaults;
         
         //split at title
         
@@ -48,8 +47,8 @@ class XSPFPL_Admin {
         
         $after[$this->column_name_last_track] = __('Last track','xspfpl');
         $after[$this->column_name_health] = __('Live','xspfpl');
-        $after[$this->column_name_loads] = __('Requests','xspfpl');
-        $after[$this->column_name_dynamic] = '';
+        $after[$this->column_name_requests_count] = __('Requests','xspfpl').'<br/><small>'.__('month','xspfpl').'/'.__('total','xspfpl').'</small>';
+        $after[$this->column_name_synced] = '';
         
         $defaults = array_merge($before,$defaults,$after);
         
@@ -57,7 +56,7 @@ class XSPFPL_Admin {
     }
     function post_column_content($column_name, $post_id){
         
-        if ( get_post_type() != xspfpl()->post_type) return;
+        if ( get_post_type() != xspfpl()->station_post_type) return;
         
         $output = '';
         
@@ -65,7 +64,7 @@ class XSPFPL_Admin {
             
             //health
             case $this->column_name_health:
-                $percentage = xspfpl_get_health($post_id);
+                $percentage = xspfpl_get_health_status();
                 if ($percentage === false){
 
                 }else{
@@ -76,24 +75,27 @@ class XSPFPL_Admin {
             //last track
             case $this->column_name_last_track:
 
-                if ($last_track = xspfpl_get_last_cached_track($post_id)){
+                if ( $last_track = xspfpl_get_last_track() ){
                     $output = $last_track;
                 }
                 
             break;
             
             //loaded
-            case $this->column_name_loads:
-                $output = xspfpl_get_xspf_request_count($post_id);
+            case $this->column_name_requests_count:
+                $total = xspfpl_get_track_request_count();
+                $month = xspfpl_get_track_request_monthly_count();
+                
+                $output = $month.'/'.$total;
+                
             break;
         
-            //dynamic icon
-            case $this->column_name_dynamic:
-                $is_static = XSPFPL_Single_Playlist::get_option('is_static');
-                if (!$is_static){
+            //live icon
+            case $this->column_name_synced:
+                if ( !$is_frozen = xspfpl_is_frozen_playlist() ){
                     $output = '<div class="dashicons dashicons-rss"></div>';
                 }else{
-                    $output = '<div class="dashicons dashicons-rss is-static"></div>';
+                    $output = '<div class="dashicons dashicons-rss is-frozen"></div>';
                 }
             break;
         

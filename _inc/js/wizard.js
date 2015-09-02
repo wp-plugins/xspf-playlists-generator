@@ -1,27 +1,27 @@
 jQuery(document).ready(function($){
+    //rouspetards
+    $("#xspf-wizard-tabs").tabs();
 
-    //show or hide feedback
-    $('.feedback-link a').click(function(e) {
-        e.preventDefault();
-        var wrapper = $(this).parents('.feedback-wrapper');
-        var content = wrapper.find('.feedback-content');
-        content.slideToggle();
-    });
-    
     //regex
-    $('a.regex-link').click(function(e) {
+    $('.xspfpl-wizard-step-content a.regex-link').click(function(e) {
         e.preventDefault();
-        var wrapper = $(this).parents('.track-info');
-        var content = wrapper.find('.regex-wrapper');
-        content.slideToggle();
+        var selector_row = $(this).parents('tr');
+        var regex_row = selector_row.next();
+        regex_row.show();
     });
     //default show regex
-    $('.regex-wrapper').each(function() {
-        var input = $( this ).find('input.regex');
+    $('.xspfpl-wizard-step-content a.regex-link').each(function() {
+        var selector_row = $(this).parents('tr');
+        var regex_row = selector_row.next();
+        regex_row.addClass('regex-row');
+        var input = regex_row.find('input');
         if (input.val() != ""){
-            $(this).addClass('has-regex');
+            regex_row.addClass('has-regex');
         }
     });
+    
+    //display wizard content
+    $('#xspfpl-wizard-metabox .inside').slideDown();
     
 });
 

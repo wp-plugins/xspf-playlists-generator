@@ -9,7 +9,7 @@ class XSPFPL_Admin_Options{
     /**
      * Start up
      */
-    public function __construct(){
+    function __construct(){
         
         add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
         add_action( 'admin_init', array( $this, 'page_init' ) );
@@ -25,11 +25,11 @@ class XSPFPL_Admin_Options{
     /**
      * Add options page
      */
-    public function add_plugin_page()
+    function add_plugin_page()
     {
         // This page will be under "Settings"
         add_submenu_page(
-                'edit.php?post_type='.xspfpl()->post_type,
+                'edit.php?post_type='.xspfpl()->station_post_type,
                 __('Options'),
                 __('Options'),
                 'manage_options',
@@ -41,14 +41,14 @@ class XSPFPL_Admin_Options{
     /**
      * Options page callback
      */
-    public function options_page(){
+    function options_page(){
         // Set class property
         
         ?>
         <div class="wrap">
             <?php screen_icon(); ?>
             <h2><?php _e('XSPF Playlist Generator','xspfpl');?></h2>  
-            
+            <?php settings_errors('xspfpl_option_group'); ?>
             
             <form method="post" action="options.php">
             <?php
@@ -65,8 +65,12 @@ class XSPFPL_Admin_Options{
     /**
      * Register and add settings
      */
-    public function page_init()
-    {        
+    function page_init(){        
+        
+        if ( !is_dir(xspfpl()->cache_dir) ){
+            add_settings_error( 'xspfpl_option_group', 'cache_disabled', sprintf(__("The directory %s does not exists.  Cache cannot be enabled.",'xspfpl'), '<em>'.xspfpl()->cache_dir.'</em>') );
+        }
+
         register_setting(
             'xspfpl_option_group', // Option group
             XSPFPL_Core::$meta_key_options, // Option name
@@ -88,25 +92,33 @@ class XSPFPL_Admin_Options{
         );
         
         add_settings_field(
+            'cache_tracks_intval', 
+            __('Playlist cache duration','xspfpl'), 
+            array( $this, 'playlist_cache_callback' ), 
+            'xspfpl-settings-admin', 
+            'settings_playlist'
+        );
+
+        add_settings_field(
             'playlist_link', 
-            __('Embed playlist link','xspfpl'), 
+            __('Embed links','xspfpl'), 
             array( $this, 'playlist_link_callback' ), 
             'xspfpl-settings-admin', 
             'settings_playlist'
         );
         
         add_settings_field(
-            'thk_friendly', 
-            __('Tomahawk Friendly','xspfpl'), 
-            array( $this, 'tomahawk_friendly_callback' ), 
+            'tracklist_embed', 
+            __('Embed Tracklist','xspfpl'), 
+            array( $this, 'tracklist_embed_callback' ), 
             'xspfpl-settings-admin', 
             'settings_playlist'
         );
         
         add_settings_field(
-            'widget_embed', 
-            __('Hatchet Embed','xspfpl'), 
-            array( $this, 'widget_embed_callback' ), 
+            'enable_hatchet', 
+            __('Enable Hatchet','xspfpl'), 
+            array( $this, 'enable_hatchet_callback' ), 
             'xspfpl-settings-admin', 
             'settings_playlist'
         );
@@ -133,7 +145,7 @@ class XSPFPL_Admin_Options{
      *
      * @param array $input Contains all settings fields as array keys
      */
-    public function sanitize( $input ){
+    function sanitize( $input ){
 
         $new_input = array();
 
@@ -142,18 +154,21 @@ class XSPFPL_Admin_Options{
             $new_input = xspfpl()->options_default;
             
         }else{ //sanitize values
-
             
+            if ( isset ($input['cache_tracks_intval']) && ctype_digit ($input['cache_tracks_intval']) ){
+                $new_input['cache_tracks_intval'] = $input['cache_tracks_intval'];
+            }
+
             if( isset( $input['playlist_link'] ) ){
                 $new_input['playlist_link'] = $input['playlist_link'];
             }
-            
-            if( isset( $input['thk_friendly'] ) ){
-                $new_input['thk_friendly'] = $input['thk_friendly'];
+
+            if( isset( $input['tracklist_embed'] ) ){
+                $new_input['tracklist_embed'] = $input['tracklist_embed'];
             }
             
-            if( isset( $input['widget_embed'] ) ){
-                $new_input['widget_embed'] = $input['widget_embed'];
+            if( isset( $input['enable_hatchet'] ) ){
+                $new_input['enable_hatchet'] = $input['enable_hatchet'];
             }
 
         }
@@ -173,18 +188,34 @@ class XSPFPL_Admin_Options{
     /** 
      * Print the Section text
      */
-    public function section_general_desc(){
+    function section_general_desc(){
     }
     
-    public function section_playlist_desc(){
+    function section_playlist_desc(){
     }
     
-    public function playlist_link_callback(){
-        $option = xspfpl()->get_option('playlist_link');
+    function playlist_cache_callback(){
+        $option = (int)xspfpl()->get_options('cache_tracks_intval');
+        $disabled = (!is_dir(xspfpl()->cache_dir)); 
+
+        $help = '<small>'.__('Number of seconds a playlist is cached before requesting the remote page again. 0 = Disabled.','xspfpl').'</small>';
+        
+        printf(
+            '<input type="number" name="%1$s[cache_tracks_intval]" size="4" min="0" value="%2$s" %3$s/><br/>%4$s',
+            XSPFPL_Core::$meta_key_options,
+            $option,
+            disabled( $disabled , true, false),
+            $help
+        );
+        
+    }
+    
+    function playlist_link_callback(){
+        $option = xspfpl()->get_options('playlist_link');
 
         $checked = checked( (bool)$option, true, false );
-        $desc = __('Adds automatically a link to the playlist in the post content.','xspfpl');
-        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_playlist_link()</code>').'</small>';
+        $desc = __('Automatically embed the playlist links.','xspfpl');
+        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_html_pre()</code>').'</small>';
                 
         printf(
             '<input type="checkbox" name="%1$s[playlist_link]" value="on" %2$s/> %3$s<br/>%4$s',
@@ -195,15 +226,15 @@ class XSPFPL_Admin_Options{
         );
     }
     
-    public function tomahawk_friendly_callback(){
-        $option = xspfpl()->get_option('thk_friendly');
+    function tracklist_embed_callback(){
+        $option = xspfpl()->get_options('tracklist_embed');
 
         $checked = checked( (bool)$option, true, false );
-        $desc = __('Format playlist links to be Tomahawk-friendly.','xspfpl');
-        $help = '<small>'.sprintf(__('Use the %1$s protocol, so %2$s automatically loads the playlist when the link is clicked.  If disabled, clicking the playlist link will display the XSPF file content.','xspfpl'),'<code>tomahawk://</code>','<a href="http://www.tomahawk-player.org/" target="_blank">Tomahawk</a>').'</small>';
+        $desc = __('Automatically embed the tracklist.','xspfpl');
+        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_tracklist_table()</code>').'</small>';
                 
         printf(
-            '<input type="checkbox" name="%1$s[thk_friendly]" value="on" %2$s/> %3$s<br/>%4$s',
+            '<input type="checkbox" name="%1$s[tracklist_embed]" value="on" %2$s/> %3$s<br/>%4$s',
             XSPFPL_Core::$meta_key_options,
             $checked,
             $desc,
@@ -211,21 +242,21 @@ class XSPFPL_Admin_Options{
         );
     }
     
-    public function widget_embed_callback(){
-        $option = xspfpl()->get_option('widget_embed');
+    function enable_hatchet_callback(){
+        $option = xspfpl()->get_options('enable_hatchet');
+        $help = null;
 
         $checked = checked( (bool)$option, true, false );
         $disabled = disabled(class_exists('Hatchet'), false, false); 
  
-        $desc = __('Embeds the hatchet playlist widget after post content.','xspfpl');
-        $help = '<small>'.sprintf(__('You might want to disable this and use function %s instead, in your templates.','xspfpl'),'<code>xspfpl_get_widget_playlist()</code>').'</small>';
-                
+        $desc = __('Embeds the hatchet widgets in the tracklist.','xspfpl');
+      
         if ($disabled){
             $help = '<small><strong>'.sprintf(__('The plugin %1$s is needed to enable this feature.','xspfpl'),'<a href="https://wordpress.org/plugins/wp-hatchet/" target="_blank">Hatchet</a>').'</strong></small>';
         }
         
         printf(
-            '<input type="checkbox" name="%1$s[widget_embed]" value="on" %2$s %3$s/> %4$s<br/>%5$s',
+            '<input type="checkbox" name="%1$s[enable_hatchet]" value="on" %2$s %3$s/> %4$s<br/>%5$s',
             XSPFPL_Core::$meta_key_options,
             $checked,
             $disabled,
@@ -235,11 +266,11 @@ class XSPFPL_Admin_Options{
     }
     
 
-    public function section_system_desc(){
+    function section_system_desc(){
     }
 
     
-    public function reset_options_callback(){
+    function reset_options_callback(){
         printf(
             '<input type="checkbox" name="%1$s[reset_options]" value="on"/> %2$s',
             XSPFPL_Core::$meta_key_options,

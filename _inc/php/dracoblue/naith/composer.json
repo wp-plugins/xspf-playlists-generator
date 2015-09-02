@@ -1,0 +1,15 @@
+{
+    "name": "dracoblue/naith",
+    "description": "A simple php test runner, without the bloat of other frameworks.",
+    "keywords": [ "testing" ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DracoBlue",
+            "email": "JanS@DracoBlue.de"
+        }
+    ],
+    "require": {
+        "php": ">=5.2.0"
+    }
+}

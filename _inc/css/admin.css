@@ -1,22 +1,27 @@
-.column-xspfpl_dynamic{
-    width:30px;
-    text-align:center;
-}
-.column-xspfpl_dynamic .is-static{
-    opacity:0.2;
-}
-.column-xspfpl_loads,
-.column-xspfpl_health{
-    width:60px;
-}
-#the-list .tracks-table .track-album{
-    display:none;
-}
-#the-list .tracks-table td{
-    display: inline;
-    padding: 0;
-    margin: 0;
-}
-#the-list .tracks-table td.track-artist:after{
-    content:" - ";
-}
+/* line 3, ../scss/admin.scss */
+.column-xspfpl_synced {
+  width: 30px;
+  text-align: center; }
+  /* line 6, ../scss/admin.scss */
+  .column-xspfpl_synced .is-frozen {
+    opacity: 0.2; }
+
+/* line 10, ../scss/admin.scss */
+.column-xspfpl_loads {
+  width: 80px; }
+
+/* line 13, ../scss/admin.scss */
+.column-xspfpl_health {
+  width: 80px; }
+
+/* line 17, ../scss/admin.scss */
+#the-list .tracks-table .track-album {
+  display: none; }
+/* line 20, ../scss/admin.scss */
+#the-list .tracks-table td {
+  display: inline;
+  padding: 0;
+  margin: 0; }
+  /* line 24, ../scss/admin.scss */
+  #the-list .tracks-table td.track-artist:after {
+    content: " - "; }

@@ -1,0 +1,10 @@
+{
+    "require": {
+        "querypath/QueryPath": ">=3.0.0",
+        "dracoblue/craur": "dev-master",
+        "gajus/dindent": "^2.0"
+    },
+    "config": {
+        "vendor-dir": ""
+    }
+}

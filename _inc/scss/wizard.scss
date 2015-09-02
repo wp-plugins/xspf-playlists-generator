@@ -1,0 +1,86 @@
+@import "compass";
+@import "_tracks-table";
+
+#xspfpl-wizard-metabox {
+    position:relative;
+    .inside{
+        overflow:auto;
+        display:none;
+    }
+
+    pre.xspf-raw, pre.xspf-raw code {
+        //Instead of the line below you could use @includebox-sizing($bs)
+        box-sizing: border-box;
+        webkit-box-sizing: border-box;
+        display: block;
+        white-space: pre-wrap;
+        white-space: -pre-wrap;
+        word-wrap: break-word;
+        width: 100%;
+        overflow: auto;
+    }
+    
+    
+    .playlist-service-title-suffix {
+            color: lightgrey;
+            padding-right: 0.5em;
+    }
+    .tracks-selector-prefix {
+            color: lightgrey;
+            padding-right: 0.5em;
+    }
+    #xspf-wizard-tabs {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1em;
+            #xspf-wizard-tabs-header li {
+                    display: inline-block;
+                    &.ui-tabs-active a {
+                            background: white;
+                            border-bottom: 0;
+                    }
+            }
+    }
+    .regex-link {
+            text-decoration: none;
+    }
+    .regex-row {
+            display: none;
+            &.has-regex {
+                    display: table-row;
+            }
+            td {
+                    color: #999;
+                    padding: 5px;
+                    font-family: Consolas, Monaco, monospace;
+            }
+            .regex-field {
+                    &:before {
+                            text-align: center;
+                            width: 20px;
+                            content: '~';
+                    }
+                    &:after {
+                            text-align: center;
+                            width: 20px;
+                            content: '~m';
+                    }
+                    input {
+                            width: 90%;
+                            color: #999;
+                    }
+            }
+    }
+    pre.xspf-raw {
+            max-height: 200px;
+            border: 1px solid lightgrey;
+            padding: 10px;
+            code {
+                    background: none;
+            }
+    }
+    .ui-tabs-panel > h3:first-of-type {
+            display: none;
+    }
+}
+
+

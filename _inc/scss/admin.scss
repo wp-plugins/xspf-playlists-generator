@@ -1,0 +1,28 @@
+@import "compass";
+
+.column-xspfpl_synced {
+	width: 30px;
+	text-align: center;
+	.is-frozen {
+		opacity: 0.2;
+	}
+}
+.column-xspfpl_loads {
+	width: 80px;
+}
+.column-xspfpl_health {
+	width: 80px;
+}
+#the-list .tracks-table {
+	.track-album {
+		display: none;
+	}
+	td {
+		display: inline;
+		padding: 0;
+		margin: 0;
+		&.track-artist:after {
+			content: " - ";
+		}
+	}
+}
