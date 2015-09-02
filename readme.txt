@@ -7,7 +7,7 @@ Tested up to: 4.3
 Stable tag: trunk
 License: GPLv2 or later
 
-Extract online datas (from radio stations, music services, tracklists, XML files, RSS feeds...); and generate a [XSPF](http://en.wikipedia.org/wiki/XSPF/) playlist that stays synced with your source.
+Extract online datas (from radio stations, music services, tracklists, XML files, RSS feeds...); and generate a XSPF playlist that stays synced with your source.
 
 == Description ==
 
