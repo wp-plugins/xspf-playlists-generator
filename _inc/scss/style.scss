@@ -1,0 +1,94 @@
+@import "compass";
+@import "_tracks-table";
+
+body{
+    &:not(.single-station) form.xspfpl-playlist-service-form fieldset small{
+        display:none;
+    }
+    
+    form.xspfpl-playlist-service-form{
+        text-align: center;
+        padding: 10px;
+
+        fieldset {
+                border: 0;
+                margin: 0;
+                margin-bottom: 1em;
+                padding: 0;
+                label {
+                        display: none;
+                }
+                small {
+                        display: block;
+                        padding-bottom: 1em;
+                }
+        }
+    }
+    
+    &.single .hentry form.xspfpl-playlist-service-form{
+        clear: both;
+        max-width: 40%;
+        float: right;
+        margin: 10px;
+        width: 250px;
+    }
+    
+    ul.station-links{
+
+    }
+    
+    .hentry ul.station-links{
+        
+    }
+    
+
+
+    
+    /*margin-right:10px;
+    }
+    .form.xspfpl-playlist-service-form button,.xspfpl-links a{
+
+    }
+    */
+    /*
+
+    /*
+    .xspfpl-links {
+            position: relative;
+            min-width: 175px;
+            text-align: center!important;
+
+            a{
+                text-decoration: none;
+
+                width: 80%;
+                display: inline-block;
+                padding: 1em;
+                color: white;
+                &:hover, &:visited {
+                  color: white;
+                }
+                &:hover {
+                  background-color: #444;
+                }
+                &:link, &:visited, &:a:active {
+                  color: white;
+                }
+
+            }
+
+            &.is-service {
+              &:not(.is-service-ready) .xspf-link, &.is-service-ready .generate-link {
+                display: none;
+              }
+            }
+
+    }
+    */
+}
+
+
+
+
+
+

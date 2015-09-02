@@ -1,0 +1,82 @@
+@import "compass";
+
+.xspfpl-tracklist-table {
+    position:relative;
+    font-family: "Open Sans",sans-serif;
+    width: 100%;
+    .tablenav{
+        .tablenav-pages{
+            line-height:3em;
+        }
+    }
+
+    table{
+        width: 100%;
+	display: table;
+	border-collapse: separate;
+	border-spacing: 2px;
+	border: 1px solid #e5e5e5;
+        
+        background: rgba(255,255,255,0.5);
+        
+        th{
+            font-weight: 400;
+        }
+        
+        
+        
+	thead {
+            display: table-header-group;
+            vertical-align: middle;
+            border-color: inherit;
+            th{
+                border-bottom: 1px solid #e1e1e1;
+            }
+	}
+        tfoot {
+            th {
+                border-top: 1px solid #e1e1e1;
+            }
+        }
+        
+        th,td{
+            padding:0 10px;
+            height:50px;
+            &.column-cb {
+                    text-align: center;
+                    width:4em;
+            }
+        }
+
+	tbody tr {
+            
+            @include transition-property(background);
+            @include transition-duration(.4s);
+
+            &:nth-child(odd) {
+                    background: rgba(249, 249, 249, 0.5);
+            }
+            &:hover {
+                    background: rgba(0,0,0,0.025);
+                    td.column-image img{
+                        @include opacity(0.8);
+                    }
+            }
+
+            td{
+                &.column-image{
+                    width: 50px;
+                    padding:0;
+                    img {
+                        max-width: 100%;
+                        @include opacity(0.2);
+                        @include transition-property(opacity);
+                        @include transition-duration(.4s);
+                    }
+                }
+            }
+                
+	}
+    }
+ 
+}

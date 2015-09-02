@@ -1,0 +1,146 @@
+/* line 3, ../scss/_tracks-table.scss */
+.xspfpl-tracklist-table {
+  position: relative;
+  font-family: "Open Sans",sans-serif;
+  width: 100%; }
+  /* line 8, ../scss/_tracks-table.scss */
+  .xspfpl-tracklist-table .tablenav .tablenav-pages {
+    line-height: 3em; }
+  /* line 13, ../scss/_tracks-table.scss */
+  .xspfpl-tracklist-table table {
+    width: 100%;
+    display: table;
+    border-collapse: separate;
+    border-spacing: 2px;
+    border: 1px solid #e5e5e5;
+    background: rgba(255, 255, 255, 0.5); }
+    /* line 22, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table th {
+      font-weight: 400; }
+    /* line 28, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table thead {
+      display: table-header-group;
+      vertical-align: middle;
+      border-color: inherit; }
+      /* line 32, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table thead th {
+        border-bottom: 1px solid #e1e1e1; }
+    /* line 37, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table tfoot th {
+      border-top: 1px solid #e1e1e1; }
+    /* line 42, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table th, .xspfpl-tracklist-table table td {
+      padding: 0 10px;
+      height: 50px; }
+      /* line 45, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table th.column-cb, .xspfpl-tracklist-table table td.column-cb {
+        text-align: center;
+        width: 4em; }
+    /* line 51, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table tbody tr {
+      -moz-transition-property: background;
+      -o-transition-property: background;
+      -webkit-transition-property: background;
+      transition-property: background;
+      -moz-transition-duration: 0.4s;
+      -o-transition-duration: 0.4s;
+      -webkit-transition-duration: 0.4s;
+      transition-duration: 0.4s; }
+      /* line 56, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr:nth-child(odd) {
+        background: rgba(249, 249, 249, 0.5); }
+      /* line 59, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr:hover {
+        background: rgba(0, 0, 0, 0.025); }
+        /* line 61, ../scss/_tracks-table.scss */
+        .xspfpl-tracklist-table table tbody tr:hover td.column-image img {
+          filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+          opacity: 0.8; }
+      /* line 67, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr td.column-image {
+        width: 50px;
+        padding: 0; }
+        /* line 70, ../scss/_tracks-table.scss */
+        .xspfpl-tracklist-table table tbody tr td.column-image img {
+          max-width: 100%;
+          filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=20);
+          opacity: 0.2;
+          -moz-transition-property: opacity;
+          -o-transition-property: opacity;
+          -webkit-transition-property: opacity;
+          transition-property: opacity;
+          -moz-transition-duration: 0.4s;
+          -o-transition-duration: 0.4s;
+          -webkit-transition-duration: 0.4s;
+          transition-duration: 0.4s; }
+
+/* line 4, ../scss/style.scss */
+body {
+    /*margin-right:10px;
+    }
+    .form.xspfpl-playlist-service-form button,.xspfpl-links a{
+
+    }
+    */
+    /*
+
+    /*
+    .xspfpl-links {
+            position: relative;
+            min-width: 175px;
+            text-align: center!important;
+
+            a{
+                text-decoration: none;
+
+                width: 80%;
+                display: inline-block;
+                padding: 1em;
+                color: white;
+                &:hover, &:visited {
+                  color: white;
+                }
+                &:hover {
+                  background-color: #444;
+                }
+                &:link, &:visited, &:a:active {
+                  color: white;
+                }
+
+            }
+
+            &.is-service {
+              &:not(.is-service-ready) .xspf-link, &.is-service-ready .generate-link {
+                display: none;
+              }
+            }
+
+    }
+    */ }
+  /* line 5, ../scss/style.scss */
+  body:not(.single-station) form.xspfpl-playlist-service-form fieldset small {
+    display: none; }
+  /* line 9, ../scss/style.scss */
+  body form.xspfpl-playlist-service-form {
+    text-align: center;
+    padding: 10px; }
+    /* line 13, ../scss/style.scss */
+    body form.xspfpl-playlist-service-form fieldset {
+      border: 0;
+      margin: 0;
+      margin-bottom: 1em;
+      padding: 0; }
+      /* line 18, ../scss/style.scss */
+      body form.xspfpl-playlist-service-form fieldset label {
+        display: none; }
+      /* line 21, ../scss/style.scss */
+      body form.xspfpl-playlist-service-form fieldset small {
+        display: block;
+        padding-bottom: 1em; }
+  /* line 28, ../scss/style.scss */
+  body.single .hentry form.xspfpl-playlist-service-form {
+    clear: both;
+    max-width: 40%;
+    float: right;
+    margin: 10px;
+    width: 250px; }

@@ -1,0 +1,151 @@
+/* line 3, ../scss/_tracks-table.scss */
+.xspfpl-tracklist-table {
+  position: relative;
+  font-family: "Open Sans",sans-serif;
+  width: 100%; }
+  /* line 8, ../scss/_tracks-table.scss */
+  .xspfpl-tracklist-table .tablenav .tablenav-pages {
+    line-height: 3em; }
+  /* line 13, ../scss/_tracks-table.scss */
+  .xspfpl-tracklist-table table {
+    width: 100%;
+    display: table;
+    border-collapse: separate;
+    border-spacing: 2px;
+    border: 1px solid #e5e5e5;
+    background: rgba(255, 255, 255, 0.5); }
+    /* line 22, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table th {
+      font-weight: 400; }
+    /* line 28, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table thead {
+      display: table-header-group;
+      vertical-align: middle;
+      border-color: inherit; }
+      /* line 32, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table thead th {
+        border-bottom: 1px solid #e1e1e1; }
+    /* line 37, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table tfoot th {
+      border-top: 1px solid #e1e1e1; }
+    /* line 42, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table th, .xspfpl-tracklist-table table td {
+      padding: 0 10px;
+      height: 50px; }
+      /* line 45, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table th.column-cb, .xspfpl-tracklist-table table td.column-cb {
+        text-align: center;
+        width: 4em; }
+    /* line 51, ../scss/_tracks-table.scss */
+    .xspfpl-tracklist-table table tbody tr {
+      -moz-transition-property: background;
+      -o-transition-property: background;
+      -webkit-transition-property: background;
+      transition-property: background;
+      -moz-transition-duration: 0.4s;
+      -o-transition-duration: 0.4s;
+      -webkit-transition-duration: 0.4s;
+      transition-duration: 0.4s; }
+      /* line 56, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr:nth-child(odd) {
+        background: rgba(249, 249, 249, 0.5); }
+      /* line 59, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr:hover {
+        background: rgba(0, 0, 0, 0.025); }
+        /* line 61, ../scss/_tracks-table.scss */
+        .xspfpl-tracklist-table table tbody tr:hover td.column-image img {
+          filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+          opacity: 0.8; }
+      /* line 67, ../scss/_tracks-table.scss */
+      .xspfpl-tracklist-table table tbody tr td.column-image {
+        width: 50px;
+        padding: 0; }
+        /* line 70, ../scss/_tracks-table.scss */
+        .xspfpl-tracklist-table table tbody tr td.column-image img {
+          max-width: 100%;
+          filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=20);
+          opacity: 0.2;
+          -moz-transition-property: opacity;
+          -o-transition-property: opacity;
+          -webkit-transition-property: opacity;
+          transition-property: opacity;
+          -moz-transition-duration: 0.4s;
+          -o-transition-duration: 0.4s;
+          -webkit-transition-duration: 0.4s;
+          transition-duration: 0.4s; }
+
+/* line 4, ../scss/wizard.scss */
+#xspfpl-wizard-metabox {
+  position: relative; }
+  /* line 6, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .inside {
+    overflow: auto;
+    display: none; }
+  /* line 11, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox pre.xspf-raw, #xspfpl-wizard-metabox pre.xspf-raw code {
+    box-sizing: border-box;
+    webkit-box-sizing: border-box;
+    display: block;
+    white-space: pre-wrap;
+    white-space: -pre-wrap;
+    word-wrap: break-word;
+    width: 100%;
+    overflow: auto; }
+  /* line 24, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .playlist-service-title-suffix {
+    color: lightgrey;
+    padding-right: 0.5em; }
+  /* line 28, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .tracks-selector-prefix {
+    color: lightgrey;
+    padding-right: 0.5em; }
+  /* line 32, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox #xspf-wizard-tabs {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1em; }
+    /* line 35, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox #xspf-wizard-tabs #xspf-wizard-tabs-header li {
+      display: inline-block; }
+      /* line 37, ../scss/wizard.scss */
+      #xspfpl-wizard-metabox #xspf-wizard-tabs #xspf-wizard-tabs-header li.ui-tabs-active a {
+        background: white;
+        border-bottom: 0; }
+  /* line 43, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .regex-link {
+    text-decoration: none; }
+  /* line 46, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .regex-row {
+    display: none; }
+    /* line 48, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox .regex-row.has-regex {
+      display: table-row; }
+    /* line 51, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox .regex-row td {
+      color: #999;
+      padding: 5px;
+      font-family: Consolas, Monaco, monospace; }
+    /* line 57, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox .regex-row .regex-field:before {
+      text-align: center;
+      width: 20px;
+      content: '~'; }
+    /* line 62, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox .regex-row .regex-field:after {
+      text-align: center;
+      width: 20px;
+      content: '~m'; }
+    /* line 67, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox .regex-row .regex-field input {
+      width: 90%;
+      color: #999; }
+  /* line 73, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox pre.xspf-raw {
+    max-height: 200px;
+    border: 1px solid lightgrey;
+    padding: 10px; }
+    /* line 77, ../scss/wizard.scss */
+    #xspfpl-wizard-metabox pre.xspf-raw code {
+      background: none; }
+  /* line 81, ../scss/wizard.scss */
+  #xspfpl-wizard-metabox .ui-tabs-panel > h3:first-of-type {
+    display: none; }

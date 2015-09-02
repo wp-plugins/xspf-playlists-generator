@@ -1,0 +1,291 @@
+[
+    {
+        "name": "phpoffice/phpexcel",
+        "version": "1.7.9",
+        "version_normalized": "1.7.9.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/PHPOffice/PHPExcel.git",
+            "reference": "7a7634fba664249a04fc771df677a9b9f755d7ec"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/PHPOffice/PHPExcel/zipball/7a7634fba664249a04fc771df677a9b9f755d7ec",
+            "reference": "7a7634fba664249a04fc771df677a9b9f755d7ec",
+            "shasum": ""
+        },
+        "require": {
+            "ext-xml": "*",
+            "php": ">=5.2.0"
+        },
+        "time": "2013-05-24 11:57:42",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "PHPExcel": "Classes/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL"
+        ],
+        "authors": [
+            {
+                "name": "Maarten Balliauw",
+                "homepage": "http://blog.maartenballiauw.be"
+            },
+            {
+                "name": "Mark Baker"
+            },
+            {
+                "name": "Franck Lefevre",
+                "homepage": "http://blog.rootslabs.net"
+            },
+            {
+                "name": "Erik Tilt"
+            }
+        ],
+        "description": "PHPExcel - OpenXML - Read, Create and Write Spreadsheet documents in PHP - Spreadsheet engine",
+        "homepage": "http://phpexcel.codeplex.com",
+        "keywords": [
+            "OpenXML",
+            "excel",
+            "php",
+            "spreadsheet",
+            "xls",
+            "xlsx"
+        ]
+    },
+    {
+        "name": "symfony/yaml",
+        "version": "v2.6.7",
+        "version_normalized": "2.6.7.0",
+        "target-dir": "Symfony/Component/Yaml",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/symfony/Yaml.git",
+            "reference": "f157ab074e453ecd4c0fa775f721f6e67a99d9e2"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/symfony/Yaml/zipball/f157ab074e453ecd4c0fa775f721f6e67a99d9e2",
+            "reference": "f157ab074e453ecd4c0fa775f721f6e67a99d9e2",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "require-dev": {
+            "symfony/phpunit-bridge": "~2.7"
+        },
+        "time": "2015-05-02 15:18:45",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.6-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Symfony\\Component\\Yaml\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com"
+            },
+            {
+                "name": "Symfony Community",
+                "homepage": "https://symfony.com/contributors"
+            }
+        ],
+        "description": "Symfony Yaml Component",
+        "homepage": "https://symfony.com"
+    },
+    {
+        "name": "dracoblue/naith",
+        "version": "1.1.1",
+        "version_normalized": "1.1.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/DracoBlue/naith.git",
+            "reference": "f8c7e1ddd2639460f7a3203ad1cba8ec7af440e7"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/DracoBlue/naith/zipball/f8c7e1ddd2639460f7a3203ad1cba8ec7af440e7",
+            "reference": "f8c7e1ddd2639460f7a3203ad1cba8ec7af440e7",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.2.0"
+        },
+        "time": "2013-06-10 14:48:42",
+        "type": "library",
+        "installation-source": "dist",
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "DracoBlue",
+                "email": "JanS@DracoBlue.de"
+            }
+        ],
+        "description": "A simple php test runner, without the bloat of other frameworks.",
+        "keywords": [
+            "testing"
+        ]
+    },
+    {
+        "name": "dracoblue/craur",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/DracoBlue/Craur.git",
+            "reference": "4e6f5d93aa8b774f5df4e9b9c55c0cac9dda22a4"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/DracoBlue/Craur/zipball/4e6f5d93aa8b774f5df4e9b9c55c0cac9dda22a4",
+            "reference": "4e6f5d93aa8b774f5df4e9b9c55c0cac9dda22a4",
+            "shasum": ""
+        },
+        "require": {
+            "dracoblue/naith": "1.1.*",
+            "phpoffice/phpexcel": "1.7.*",
+            "symfony/yaml": "*"
+        },
+        "time": "2015-04-28 14:35:01",
+        "bin": [
+            "bin/craur"
+        ],
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "src/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "DracoBlue",
+                "email": "JanS@DracoBlue.de"
+            }
+        ],
+        "description": "A lossless xml to json and json to xml converter (and csv/xlsx/yaml). Writing PHP Json/Xml/Csv/Yaml/excel Importers made easy",
+        "keywords": [
+            "csv",
+            "dom",
+            "excel",
+            "exporter",
+            "importer",
+            "json",
+            "xml",
+            "yaml"
+        ]
+    },
+    {
+        "name": "gajus/dindent",
+        "version": "2.0.2",
+        "version_normalized": "2.0.2.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/gajus/dindent.git",
+            "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/gajus/dindent/zipball/d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+            "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3"
+        },
+        "require-dev": {
+            "satooshi/php-coveralls": "dev-master"
+        },
+        "time": "2014-10-08 10:03:04",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Gajus\\Dindent\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD-3-Clause"
+        ],
+        "authors": [
+            {
+                "name": "Gajus Kuizinas",
+                "email": "gk@anuary.com"
+            }
+        ],
+        "description": "HTML indentation library for development and testing.",
+        "homepage": "https://github.com/gajus/dindent",
+        "keywords": [
+            "format",
+            "html",
+            "indent"
+        ]
+    },
+    {
+        "name": "querypath/querypath",
+        "version": "3.0.3",
+        "version_normalized": "3.0.3.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/technosophos/querypath.git",
+            "reference": "13224745f7348e099d2dde9e555bc8972c21a810"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/technosophos/querypath/zipball/13224745f7348e099d2dde9e555bc8972c21a810",
+            "reference": "13224745f7348e099d2dde9e555bc8972c21a810",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "time": "2014-09-23 19:04:19",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "QueryPath": "src/"
+            },
+            "files": [
+                "src/qp_functions.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "description": "HTML/XML querying (CSS 4 or XPath) and processing (like jQuery)",
+        "homepage": "https://github.com/technosophos/querypath",
+        "keywords": [
+            "css",
+            "html",
+            "jquery",
+            "xml",
+            "xslt"
+        ]
+    }
+]
